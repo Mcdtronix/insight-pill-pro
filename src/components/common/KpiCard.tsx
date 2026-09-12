@@ -72,7 +72,7 @@ export function KpiCard({
 
   if (!to) return body;
   return (
-    <Link to={to} className="block h-full focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none">
+    <Link to={to as "/"} className="block h-full focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none">
       {body}
     </Link>
   );
