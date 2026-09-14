@@ -13,6 +13,9 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as AppDashboardRouteImport } from './routes/_app.dashboard'
+import { Route as AppExpiryRouteImport } from './routes/_app.expiry'
+import { Route as AppForecastingRouteImport } from './routes/_app.forecasting'
+import { Route as AppRecommendationsRouteImport } from './routes/_app.recommendations'
 import { Route as AppInventoryIndexRouteImport } from './routes/_app.inventory.index'
 import { Route as AppInventoryMedicineIdRouteImport } from './routes/_app.inventory.$medicineId'
 
@@ -35,6 +38,21 @@ const AppDashboardRoute = AppDashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => AppRoute,
 } as any)
+const AppExpiryRoute = AppExpiryRouteImport.update({
+  id: '/expiry',
+  path: '/expiry',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppForecastingRoute = AppForecastingRouteImport.update({
+  id: '/forecasting',
+  path: '/forecasting',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppRecommendationsRoute = AppRecommendationsRouteImport.update({
+  id: '/recommendations',
+  path: '/recommendations',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppInventoryIndexRoute = AppInventoryIndexRouteImport.update({
   id: '/inventory/',
   path: '/inventory/',
@@ -50,6 +68,9 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/dashboard': typeof AppDashboardRoute
+  '/expiry': typeof AppExpiryRoute
+  '/forecasting': typeof AppForecastingRoute
+  '/recommendations': typeof AppRecommendationsRoute
   '/inventory/$medicineId': typeof AppInventoryMedicineIdRoute
   '/inventory/': typeof AppInventoryIndexRoute
 }
@@ -57,6 +78,9 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/dashboard': typeof AppDashboardRoute
+  '/expiry': typeof AppExpiryRoute
+  '/forecasting': typeof AppForecastingRoute
+  '/recommendations': typeof AppRecommendationsRoute
   '/inventory/$medicineId': typeof AppInventoryMedicineIdRoute
   '/inventory': typeof AppInventoryIndexRoute
 }
@@ -66,21 +90,42 @@ export interface FileRoutesById {
   '/_app': typeof AppRouteWithChildren
   '/login': typeof LoginRoute
   '/_app/dashboard': typeof AppDashboardRoute
+  '/_app/expiry': typeof AppExpiryRoute
+  '/_app/forecasting': typeof AppForecastingRoute
+  '/_app/recommendations': typeof AppRecommendationsRoute
   '/_app/inventory/$medicineId': typeof AppInventoryMedicineIdRoute
   '/_app/inventory/': typeof AppInventoryIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    '/' | '/login' | '/dashboard' | '/inventory/$medicineId' | '/inventory/'
+    | '/'
+    | '/login'
+    | '/dashboard'
+    | '/expiry'
+    | '/forecasting'
+    | '/recommendations'
+    | '/inventory/$medicineId'
+    | '/inventory/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/login' | '/dashboard' | '/inventory/$medicineId' | '/inventory'
+  to:
+    | '/'
+    | '/login'
+    | '/dashboard'
+    | '/expiry'
+    | '/forecasting'
+    | '/recommendations'
+    | '/inventory/$medicineId'
+    | '/inventory'
   id:
     | '__root__'
     | '/'
     | '/_app'
     | '/login'
     | '/_app/dashboard'
+    | '/_app/expiry'
+    | '/_app/forecasting'
+    | '/_app/recommendations'
     | '/_app/inventory/$medicineId'
     | '/_app/inventory/'
   fileRoutesById: FileRoutesById
@@ -121,6 +166,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppDashboardRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/expiry': {
+      id: '/_app/expiry'
+      path: '/expiry'
+      fullPath: '/expiry'
+      preLoaderRoute: typeof AppExpiryRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/forecasting': {
+      id: '/_app/forecasting'
+      path: '/forecasting'
+      fullPath: '/forecasting'
+      preLoaderRoute: typeof AppForecastingRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/recommendations': {
+      id: '/_app/recommendations'
+      path: '/recommendations'
+      fullPath: '/recommendations'
+      preLoaderRoute: typeof AppRecommendationsRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/inventory/': {
       id: '/_app/inventory/'
       path: '/inventory'
@@ -140,12 +206,18 @@ declare module '@tanstack/react-router' {
 
 interface AppRouteChildren {
   AppDashboardRoute: typeof AppDashboardRoute
+  AppExpiryRoute: typeof AppExpiryRoute
+  AppForecastingRoute: typeof AppForecastingRoute
+  AppRecommendationsRoute: typeof AppRecommendationsRoute
   AppInventoryMedicineIdRoute: typeof AppInventoryMedicineIdRoute
   AppInventoryIndexRoute: typeof AppInventoryIndexRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
   AppDashboardRoute: AppDashboardRoute,
+  AppExpiryRoute: AppExpiryRoute,
+  AppForecastingRoute: AppForecastingRoute,
+  AppRecommendationsRoute: AppRecommendationsRoute,
   AppInventoryMedicineIdRoute: AppInventoryMedicineIdRoute,
   AppInventoryIndexRoute: AppInventoryIndexRoute,
 }
