@@ -144,14 +144,14 @@ function ForecastingPage() {
             <CardContent className="h-[360px]">
               <ResponsiveContainer width="100%" height="100%">
                 <ComposedChart data={series} margin={{ top: 8, right: 12, bottom: 8, left: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
+                  <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
                   <XAxis dataKey="label" tick={{ fontSize: 11 }} minTickGap={24} />
                   <YAxis tick={{ fontSize: 11 }} width={48} />
                   <Tooltip
                     contentStyle={{
                       borderRadius: 8,
-                      border: "1px solid hsl(var(--border))",
-                      background: "hsl(var(--card))",
+                      border: "1px solid var(--border)",
+                      background: "var(--card)",
                       fontSize: 12,
                     }}
                   />
@@ -161,7 +161,7 @@ function ForecastingPage() {
                     dataKey="band"
                     name="Confidence interval"
                     stroke="none"
-                    fill="hsl(var(--chart-2))"
+                    fill="var(--chart-2)"
                     fillOpacity={0.18}
                     connectNulls
                   />
@@ -169,7 +169,7 @@ function ForecastingPage() {
                     type="monotone"
                     dataKey="actual"
                     name="Actual consumption"
-                    stroke="hsl(var(--chart-1))"
+                    stroke="var(--chart-1)"
                     strokeWidth={2}
                     dot={false}
                     connectNulls
@@ -178,7 +178,7 @@ function ForecastingPage() {
                     type="monotone"
                     dataKey="forecast"
                     name="Forecast"
-                    stroke="hsl(var(--chart-2))"
+                    stroke="var(--chart-2)"
                     strokeWidth={2}
                     strokeDasharray="5 4"
                     dot={false}
