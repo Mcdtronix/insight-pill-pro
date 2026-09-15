@@ -310,6 +310,12 @@ function riskFor(daysRemaining: number, projectedUnused: number): ExpiryRisk {
   return "low";
 }
 
+/**
+ * Slow-moving lines hold far more stock than they dispense, so a share of each
+ * near-dated batch is realistically at risk of expiring unused.
+ */
+const SLOW_MOVING_FACTORS = [0.18, 1, 0.35, 1, 0.55, 1, 0.25, 1];
+
 export const expiryBatches: ExpiryBatch[] = inventory
   .filter((i) => i.currentStock > 0)
   .map((item, idx) => {
@@ -318,7 +324,12 @@ export const expiryBatches: ExpiryBatch[] = inventory
       Math.round((new Date(item.earliestExpiry).getTime() - Date.now()) / 86400000),
     );
     const quantity = Math.round(item.currentStock * 0.6);
-    const projectedUnused = Math.max(0, quantity - item.dailyConsumption * daysRemaining);
+    // Only part of total demand is served from this batch on slow-moving lines.
+    const batchDailyUse = Math.max(
+      1,
+      Math.round(item.dailyConsumption * SLOW_MOVING_FACTORS[idx % SLOW_MOVING_FACTORS.length]),
+    );
+    const projectedUnused = Math.max(0, quantity - batchDailyUse * daysRemaining);
     const risk = riskFor(daysRemaining, projectedUnused);
     return {
       id: `batch-${idx + 1}`,
@@ -329,7 +340,7 @@ export const expiryBatches: ExpiryBatch[] = inventory
       quantity,
       expiryDate: item.earliestExpiry,
       daysRemaining,
-      dailyConsumption: item.dailyConsumption,
+      dailyConsumption: batchDailyUse,
       projectedUnusedUnits: projectedUnused,
       potentialLossValue: Number((projectedUnused * item.unitCost).toFixed(2)),
       risk,

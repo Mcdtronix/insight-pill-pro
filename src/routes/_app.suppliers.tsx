@@ -186,13 +186,13 @@ function SupplierDetail({ supplier }: { supplier: Supplier }) {
             <CardContent className="h-56">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={performance.data.trend} margin={{ top: 8, right: 8, bottom: 0, left: -16 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
+                  <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
                   <XAxis dataKey="period" tick={{ fontSize: 11 }} />
                   <YAxis tick={{ fontSize: 11 }} />
                   <Tooltip contentStyle={{ fontSize: 12, borderRadius: 8 }} />
                   <Legend wrapperStyle={{ fontSize: 11 }} />
-                  <Line type="monotone" dataKey="score" name="Score" stroke="hsl(var(--chart-1))" strokeWidth={2} />
-                  <Line type="monotone" dataKey="onTime" name="On-time %" stroke="hsl(var(--chart-2))" strokeWidth={2} />
+                  <Line type="monotone" dataKey="score" name="Score" stroke="var(--chart-1)" strokeWidth={2} />
+                  <Line type="monotone" dataKey="onTime" name="On-time %" stroke="var(--chart-2)" strokeWidth={2} />
                 </LineChart>
               </ResponsiveContainer>
             </CardContent>
