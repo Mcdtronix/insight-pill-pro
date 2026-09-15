@@ -181,7 +181,14 @@ function RecommendationsPage() {
                   <Fact label="Reorder point" value={formatNumber(item.reorderPoint)} />
                   <Fact label="Predicted demand" value={formatNumber(item.predictedDemand)} />
                   <Fact label="Safety stock" value={formatNumber(item.safetyStock)} />
-                  <Fact label="Days to reorder point" value={`${item.daysUntilReorderPoint} days`} />
+                  <Fact
+                    label="Days to reorder point"
+                    value={
+                      item.daysUntilReorderPoint === 0
+                        ? "Already reached"
+                        : `${item.daysUntilReorderPoint} days`
+                    }
+                  />
                 </div>
 
                 <div className="rounded-lg border border-primary/20 bg-primary/5 p-4">
