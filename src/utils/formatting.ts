@@ -14,7 +14,7 @@ export function formatCompactCurrency(value: number): string {
     style: "currency",
     currency: "USD",
     notation: value >= 10000 ? "compact" : "standard",
-    maximumFractionDigits: 1,
+    maximumFractionDigits: value >= 10000 ? 1 : 0,
   }).format(value);
 }
 
