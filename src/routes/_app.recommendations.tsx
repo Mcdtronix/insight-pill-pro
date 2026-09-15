@@ -165,7 +165,7 @@ function RecommendationsPage() {
                   </CardTitle>
                   <CardDescription>
                     {item.supplierName} · lead time {item.leadTimeDays} days · confidence{" "}
-                    {Math.round(item.confidence * 100)}%
+                    {Math.round(item.confidence)}%
                   </CardDescription>
                 </div>
                 <div className="text-right">
