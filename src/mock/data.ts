@@ -340,7 +340,7 @@ export const expiryBatches: ExpiryBatch[] = inventory
       quantity,
       expiryDate: item.earliestExpiry,
       daysRemaining,
-      dailyConsumption: item.dailyConsumption,
+      dailyConsumption: batchDailyUse,
       projectedUnusedUnits: projectedUnused,
       potentialLossValue: Number((projectedUnused * item.unitCost).toFixed(2)),
       risk,
