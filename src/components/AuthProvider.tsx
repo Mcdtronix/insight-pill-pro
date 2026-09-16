@@ -1,19 +1,10 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 
 import { authApi } from "@/api/authApi";
 import { readTokens, writeTokens } from "@/api/client";
+import { AuthContext, type AuthState } from "@/hooks/useAuth";
 import type { User } from "@/types/domain";
 import { can, type Permission } from "@/utils/permissions";
-
-interface AuthState {
-  user: User | null;
-  status: "loading" | "authenticated" | "anonymous";
-  login: (username: string, password: string) => Promise<void>;
-  logout: () => void;
-  hasPermission: (permission: Permission) => boolean;
-}
-
-const AuthContext = createContext<AuthState | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
@@ -68,10 +59,4 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
-}
-
-export function useAuth(): AuthState {
-  const ctx = useContext(AuthContext);
-  if (!ctx) throw new Error("useAuth must be used within AuthProvider");
-  return ctx;
 }
