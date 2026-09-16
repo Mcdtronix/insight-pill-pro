@@ -164,8 +164,8 @@ export const medicines: Medicine[] = seeds.map((s, i) => ({
   category: s.category,
   form: s.form,
   unitCost: s.cost,
-  supplierId: suppliers[s.supplier].id,
-  supplierName: suppliers[s.supplier].name,
+  supplierId: suppliers[s.supplier]!.id,
+  supplierName: suppliers[s.supplier]!.name,
 }));
 
 export const inventory: InventoryItem[] = seeds.map((s, i) => ({
@@ -178,8 +178,8 @@ export const inventory: InventoryItem[] = seeds.map((s, i) => ({
   reorderPoint: s.reorder,
   safetyStock: s.safety,
   dailyConsumption: s.daily,
-  supplierId: suppliers[s.supplier].id,
-  supplierName: suppliers[s.supplier].name,
+  supplierId: suppliers[s.supplier]!.id,
+  supplierName: suppliers[s.supplier]!.name,
   unitCost: s.cost,
   earliestExpiry: iso(addDays(new Date(), s.expiryInDays)),
   status: statusFor(s),
@@ -203,7 +203,7 @@ export function transactionsFor(medicineId: string): StockTransaction[] {
 }
 
 export function buildForecast(medicineId: string, horizonDays: number): Forecast {
-  const item = inventory.find((i) => i.medicineId === medicineId) ?? inventory[0];
+  const item = inventory.find((i) => i.medicineId === medicineId) ?? inventory[0]!;
   const base = item.dailyConsumption;
   const series = [];
   const history = 60;
@@ -230,7 +230,7 @@ export function buildForecast(medicineId: string, horizonDays: number): Forecast
     if (i > 0) total += value;
     series.push({
       date: iso(day),
-      actual: i === 0 ? series[series.length - 1].actual : null,
+      actual: i === 0 ? (series[series.length - 1]?.actual ?? null) : null,
       forecast: value,
       lower: Math.max(0, value - spread),
       upper: value + spread,
@@ -327,7 +327,7 @@ export const expiryBatches: ExpiryBatch[] = inventory
     // Only part of total demand is served from this batch on slow-moving lines.
     const batchDailyUse = Math.max(
       1,
-      Math.round(item.dailyConsumption * SLOW_MOVING_FACTORS[idx % SLOW_MOVING_FACTORS.length]),
+      Math.round(item.dailyConsumption * SLOW_MOVING_FACTORS[idx % SLOW_MOVING_FACTORS.length]!),
     );
     const projectedUnused = Math.max(0, quantity - batchDailyUse * daysRemaining);
     const risk = riskFor(daysRemaining, projectedUnused);

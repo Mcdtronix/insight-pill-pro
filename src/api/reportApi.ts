@@ -14,9 +14,9 @@ export interface ReportRequest {
   type: ReportType;
   from: string;
   to: string;
-  category?: string;
-  supplierId?: string;
-  stockStatus?: string;
+  category?: string | undefined;
+  supplierId?: string | undefined;
+  stockStatus?: string | undefined;
   format: "csv" | "pdf";
 }
 

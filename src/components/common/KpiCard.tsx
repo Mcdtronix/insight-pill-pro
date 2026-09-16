@@ -15,12 +15,12 @@ export function KpiCard({
 }: {
   label: string;
   value: string;
-  sublabel?: string;
-  delta?: number;
-  deltaGoodWhen?: "up" | "down";
+  sublabel?: string | undefined;
+  delta?: number | undefined;
+  deltaGoodWhen?: "up" | "down" | undefined;
   icon: LucideIcon;
-  to?: string;
-  tone?: "neutral" | "success" | "warning" | "danger";
+  to?: string | undefined;
+  tone?: "neutral" | "success" | "warning" | "danger" | undefined;
 }) {
   const direction = delta === undefined ? null : delta > 0 ? "up" : delta < 0 ? "down" : "flat";
   const good = direction === "flat" || direction === null ? null : direction === deltaGoodWhen;

@@ -107,7 +107,7 @@ export async function request<T>(path: string, options: RequestOptions = {}): Pr
           "Content-Type": "application/json",
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
-        body: body === undefined ? undefined : JSON.stringify(body),
+        ...(body === undefined ? {} : { body: JSON.stringify(body) }),
       });
     } finally {
       clearTimeout(timer);
