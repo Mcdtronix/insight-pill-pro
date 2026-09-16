@@ -20,7 +20,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { ROLE_LABELS } from "@/utils/constants";
 import { relativeTime } from "@/utils/formatting";
 
-export function Topbar({ onOpenNav }: { onOpenNav: () => void }) {
+export function Topbar({ onOpenNav, onToggleNav }: { onOpenNav: () => void; onToggleNav: () => void }) {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -59,6 +59,15 @@ export function Topbar({ onOpenNav }: { onOpenNav: () => void }) {
         onClick={onOpenNav}
         className="rounded-md p-2 text-muted-foreground hover:bg-accent lg:hidden"
         aria-label="Open navigation"
+      >
+        <Menu className="h-5 w-5" />
+      </button>
+      <button
+        type="button"
+        onClick={onToggleNav}
+        className="hidden rounded-md p-2 text-muted-foreground hover:bg-accent lg:inline-flex"
+        aria-label="Toggle sidebar"
+        title="Toggle sidebar"
       >
         <Menu className="h-5 w-5" />
       </button>
