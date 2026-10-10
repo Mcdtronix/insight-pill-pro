@@ -74,47 +74,47 @@ function DashboardPage() {
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           <KpiCard
             label="Inventory value"
-            value={formatCompactCurrency(kpis.data.inventoryValue)}
-            delta={kpis.data.deltas["inventoryValue"]}
+            value={formatCompactCurrency(kpis.data.inventoryValue ?? 0)}
+            delta={kpis.data.deltas?.["inventoryValue"]}
             sublabel="vs last month"
             icon={DollarSign}
             to="/inventory"
           />
           <KpiCard
             label="Medicines tracked"
-            value={formatNumber(kpis.data.totalMedicines)}
-            sublabel={`${formatNumber(kpis.data.activeSuppliers)} active suppliers`}
+            value={formatNumber(kpis.data.totalMedicines ?? 0)}
+            sublabel={`${formatNumber(kpis.data.activeSuppliers ?? 0)} active suppliers`}
             icon={Boxes}
             to="/inventory"
           />
           <KpiCard
             label="Low stock items"
-            value={formatNumber(kpis.data.lowStockItems)}
-            delta={kpis.data.deltas["lowStockItems"]}
+            value={formatNumber(kpis.data.lowStockItems ?? 0)}
+            delta={kpis.data.deltas?.["lowStockItems"]}
             deltaGoodWhen="down"
-            sublabel={`${kpis.data.outOfStockItems} out of stock`}
+            sublabel={`${kpis.data.outOfStockItems ?? 0} out of stock`}
             icon={AlertOctagon}
             tone="warning"
             to="/inventory"
           />
           <KpiCard
             label="Reorder decisions"
-            value={formatNumber(kpis.data.reorderRecommendations)}
-            sublabel={`${kpis.data.criticalReorders} critical`}
+            value={formatNumber(kpis.data.reorderRecommendations ?? 0)}
+            sublabel={`${kpis.data.criticalReorders ?? 0} critical`}
             icon={ShoppingCart}
-            tone={kpis.data.criticalReorders > 0 ? "danger" : "neutral"}
+            tone={(kpis.data.criticalReorders ?? 0) > 0 ? "danger" : "neutral"}
             to="/recommendations"
           />
           <KpiCard
             label="Expected demand change"
-            value={formatPercent(kpis.data.expectedDemandChangePct)}
+            value={formatPercent(kpis.data.expectedDemandChangePct ?? 0)}
             sublabel="next 30 days"
             icon={TrendingUp}
             to="/forecasting"
           />
           <KpiCard
             label="Expiry risk"
-            value={formatNumber(kpis.data.medicinesAtExpiryRisk)}
+            value={formatNumber(kpis.data.medicinesAtExpiryRisk ?? 0)}
             sublabel="batches needing action"
             icon={CalendarClock}
             tone="warning"
@@ -122,15 +122,15 @@ function DashboardPage() {
           />
           <KpiCard
             label="Supplier score"
-            value={kpis.data.avgSupplierScore.toFixed(1)}
-            delta={kpis.data.deltas["avgSupplierScore"]}
-            sublabel={`${kpis.data.lateDeliveries} late deliveries`}
+            value={(kpis.data.avgSupplierScore ?? 0).toFixed(1)}
+            delta={kpis.data.deltas?.["avgSupplierScore"]}
+            sublabel={`${kpis.data.lateDeliveries ?? 0} late deliveries`}
             icon={Truck}
             to="/suppliers"
           />
           <KpiCard
             label="Pending orders"
-            value={formatNumber(kpis.data.pendingOrders)}
+            value={formatNumber(kpis.data.pendingOrders ?? 0)}
             sublabel="awaiting delivery"
             icon={ShoppingCart}
             to="/suppliers"

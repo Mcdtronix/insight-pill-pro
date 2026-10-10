@@ -1,0 +1,6 @@
+{
+  "on_time_rate": 0.35,
+  "avg_fulfillment_rate": 0.3,
+  "avg_price_variance_pct": 0.2,
+  "avg_defect_rate": 0.15
+}

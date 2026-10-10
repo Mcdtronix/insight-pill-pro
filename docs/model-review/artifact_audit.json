@@ -1,0 +1,449 @@
+{
+  "environment": {
+    "python": "3.12.14",
+    "sklearn": "1.6.1",
+    "numpy": "2.2.6",
+    "pandas": "2.2.3",
+    "scipy": "1.15.3",
+    "joblib": "1.5.1"
+  },
+  "files": [
+    {
+      "path": "ml\\Demand\\category_encoder_v1.pkl",
+      "bytes": 671,
+      "sha256": "1a37cf40716323fe08b9d59b1523ba2cff10d8d7d1ce3c4fab26e4cfeb70dbf2",
+      "duplicate": "ml\\colab\\Demand\\category_encoder_v1.pkl",
+      "duplicate_identical": true
+    },
+    {
+      "path": "ml\\Demand\\forecast_model_v1.pkl",
+      "bytes": 23263089,
+      "sha256": "a5fa5f5dec557ccc4568dd0bc38baa046edcd48e5bc6315c261ec3cebe5c1842",
+      "duplicate": "ml\\colab\\Demand\\forecast_model_v1.pkl",
+      "duplicate_identical": true
+    },
+    {
+      "path": "ml\\Demand\\model_metadata_v1.json",
+      "bytes": 1591,
+      "sha256": "804d55062738c1bebdbbdaf28aaf2e97f19cc5825f88809d257f3675200dc5ea",
+      "duplicate": "ml\\colab\\Demand\\model_metadata_v1.json",
+      "duplicate_identical": true
+    },
+    {
+      "path": "ml\\Demand\\season_encoder_v1.pkl",
+      "bytes": 526,
+      "sha256": "ff9978b57eac173d81d4b80ccef023c00c251d0ef7baf437b29c2f60db109734",
+      "duplicate": "ml\\colab\\Demand\\season_encoder_v1.pkl",
+      "duplicate_identical": true
+    },
+    {
+      "path": "ml\\Reorder\\model_metadata_reorder_risk_v1.json",
+      "bytes": 2411,
+      "sha256": "9947387970b29bbc309b9eece20f4c8b5345e9c0dca69fb2e7093c1ce938f7fb",
+      "duplicate": "ml\\colab\\Reorder\\model_metadata_reorder_risk_v1.json",
+      "duplicate_identical": true
+    },
+    {
+      "path": "ml\\Reorder\\reorder_risk_model_v1.pkl",
+      "bytes": 2185641,
+      "sha256": "9b70657b964214e8d6ee93ecdba19274bc4626bca0728b14a71c7a6e5f977348",
+      "duplicate": "ml\\colab\\Reorder\\reorder_risk_model_v1.pkl",
+      "duplicate_identical": true
+    },
+    {
+      "path": "ml\\supplier\\model_metadata_supplier_v1.json",
+      "bytes": 1909,
+      "sha256": "7fa8c3e39f875ef3e5c7d0ba3cdd47164e98010a59ab890253f408f5669abdc5",
+      "duplicate": "ml\\colab\\supplier\\model_metadata_supplier_v1.json",
+      "duplicate_identical": true
+    },
+    {
+      "path": "ml\\supplier\\supplier_kmeans_v1.pkl",
+      "bytes": 871,
+      "sha256": "76a9c96b55852bd69da4cddc8d956e6dd1b07745ddafb4a35d5d0f5d59988c24",
+      "duplicate": "ml\\colab\\supplier\\supplier_kmeans_v1.pkl",
+      "duplicate_identical": true
+    },
+    {
+      "path": "ml\\supplier\\supplier_scaler_v1.pkl",
+      "bytes": 1159,
+      "sha256": "5e085da2d52c3ffa186cf1f0be7ed6772bed64049220da961778d9740688d07f",
+      "duplicate": "ml\\colab\\supplier\\supplier_scaler_v1.pkl",
+      "duplicate_identical": true
+    },
+    {
+      "path": "ml\\supplier\\supplier_scorecard_v1.csv",
+      "bytes": 2073,
+      "sha256": "d9a96c4b94fe1cf173d4e54d04bd980dc4d794fce538351004834be1619da0bc",
+      "duplicate": "ml\\colab\\supplier\\supplier_scorecard_v1.csv",
+      "duplicate_identical": true
+    },
+    {
+      "path": "ml\\supplier\\supplier_weights_v1.json",
+      "bytes": 117,
+      "sha256": "e3146c914ef98897b433d205cf546b956f84f065bb14c3851020052426e8acf5",
+      "duplicate": "ml\\colab\\supplier\\supplier_weights_v1.json",
+      "duplicate_identical": true
+    }
+  ],
+  "artifacts": {
+    "demand": {
+      "type": "sklearn.ensemble._forest.RandomForestRegressor",
+      "load_warnings": [],
+      "n_features_in_": 14,
+      "feature_names_in_": [
+        "medicine_id",
+        "category_enc",
+        "season_enc",
+        "day_of_week",
+        "month",
+        "is_weekend",
+        "is_public_holiday",
+        "lag_1",
+        "lag_7",
+        "lag_14",
+        "lag_30",
+        "rolling_mean_7",
+        "rolling_mean_30",
+        "rolling_std_7"
+      ],
+      "n_outputs_": 1,
+      "tree_count": 750,
+      "total_nodes": 319824,
+      "parameters": {
+        "bootstrap": true,
+        "ccp_alpha": 0.0,
+        "criterion": "squared_error",
+        "max_depth": 9,
+        "max_features": 0.7120505288795979,
+        "max_leaf_nodes": null,
+        "max_samples": null,
+        "min_impurity_decrease": 0.0,
+        "min_samples_leaf": 2,
+        "min_samples_split": 2,
+        "min_weight_fraction_leaf": 0.0,
+        "monotonic_cst": null,
+        "n_estimators": 750,
+        "n_jobs": -1,
+        "oob_score": false,
+        "random_state": 42,
+        "verbose": 0,
+        "warm_start": false
+      }
+    },
+    "category_encoder": {
+      "type": "sklearn.preprocessing._label.LabelEncoder",
+      "load_warnings": [],
+      "classes_": [
+        "Analgesic/Anti-inflammatory",
+        "Analgesic/Antipyretic",
+        "Antibiotic",
+        "Antidiabetic",
+        "Antihypertensive",
+        "Antimalarial",
+        "Antiretroviral",
+        "Antituberculosis",
+        "Gastrointestinal",
+        "Respiratory",
+        "Supplement"
+      ]
+    },
+    "season_encoder": {
+      "type": "sklearn.preprocessing._label.LabelEncoder",
+      "load_warnings": [],
+      "classes_": [
+        "Dry/Cold Season",
+        "Rainy Season",
+        "Transition Season"
+      ]
+    },
+    "reorder": {
+      "type": "sklearn.ensemble._forest.RandomForestClassifier",
+      "load_warnings": [],
+      "n_features_in_": 21,
+      "feature_names_in_": [
+        "medicine_id",
+        "current_stock_level",
+        "avg_daily_demand",
+        "demand_std_dev",
+        "lead_time_days",
+        "lead_time_variability",
+        "days_of_stock_remaining",
+        "reorder_already_placed",
+        "demand_cv",
+        "lead_time_margin",
+        "lead_time_cv",
+        "cat_Analgesic/Antipyretic",
+        "cat_Antibiotic",
+        "cat_Antidiabetic",
+        "cat_Antihypertensive",
+        "cat_Antimalarial",
+        "cat_Antiretroviral",
+        "cat_Antituberculosis",
+        "cat_Gastrointestinal",
+        "cat_Respiratory",
+        "cat_Supplement"
+      ],
+      "classes_": [
+        0,
+        1
+      ],
+      "n_outputs_": 1,
+      "tree_count": 300,
+      "total_nodes": 25794,
+      "parameters": {
+        "bootstrap": true,
+        "ccp_alpha": 0.0,
+        "class_weight": "balanced",
+        "criterion": "gini",
+        "max_depth": 8,
+        "max_features": "sqrt",
+        "max_leaf_nodes": null,
+        "max_samples": null,
+        "min_impurity_decrease": 0.0,
+        "min_samples_leaf": 5,
+        "min_samples_split": 2,
+        "min_weight_fraction_leaf": 0.0,
+        "monotonic_cst": null,
+        "n_estimators": 300,
+        "n_jobs": -1,
+        "oob_score": false,
+        "random_state": 42,
+        "verbose": 0,
+        "warm_start": false
+      }
+    },
+    "supplier_scaler": {
+      "type": "sklearn.preprocessing._data.MinMaxScaler",
+      "load_warnings": [],
+      "n_features_in_": 4,
+      "feature_names_in_": [
+        "on_time_rate",
+        "avg_fulfillment_rate",
+        "avg_price_variance_pct",
+        "avg_defect_rate"
+      ],
+      "n_samples_seen_": 12,
+      "data_min_": [
+        0.09523809523809523,
+        0.6011607142857143,
+        -11.81340425531915,
+        0.010144324324324324
+      ],
+      "data_max_": [
+        0.24742268041237114,
+        0.8981881443298969,
+        6.253095238095238,
+        0.050074999999999995
+      ],
+      "clip": false
+    },
+    "supplier_kmeans": {
+      "type": "sklearn.cluster._kmeans.KMeans",
+      "load_warnings": [],
+      "n_features_in_": 4,
+      "n_clusters": 3,
+      "cluster_centers_": [
+        [
+          0.0033287577213452213,
+          0.2518175931147857,
+          1.0,
+          0.2089658838719114
+        ],
+        [
+          0.6127757762715327,
+          0.8227196356614723,
+          0.6104330064339282,
+          0.8783311037009385
+        ],
+        [
+          0.12377060931899639,
+          0.3766566869202149,
+          0.12038363310798778,
+          0.3931657572272894
+        ]
+      ]
+    }
+  },
+  "checks": {
+    "demand_feature_contract": {
+      "declared_count": 14,
+      "actual_count": 14,
+      "names_equal": true,
+      "parameters_equal": {
+        "n_estimators": true,
+        "max_depth": true,
+        "min_samples_leaf": true,
+        "max_features": true
+      }
+    },
+    "reorder_feature_contract": {
+      "declared_count": 21,
+      "actual_count": 21,
+      "names_equal": true,
+      "parameters_equal": {
+        "n_estimators": true,
+        "max_depth": true,
+        "min_samples_leaf": true,
+        "class_weight": true,
+        "random_state": true,
+        "n_jobs": true
+      }
+    },
+    "supplier": {
+      "score_max_abs_difference": 3.3306690738754696e-16,
+      "weights_match_metadata": true,
+      "weight_sum": 1.0,
+      "rows": 12,
+      "order_count_sum": 6000,
+      "tier_counts": {
+        "Preferred": 6,
+        "At-Risk": 5,
+        "Acceptable": 1
+      },
+      "cluster_input_candidates": {
+        "raw_minmax": {
+          "cluster_to_tiers": {
+            "0": [
+              "At-Risk"
+            ],
+            "1": [
+              "Preferred"
+            ],
+            "2": [
+              "Acceptable",
+              "Preferred"
+            ]
+          },
+          "all_clusters_single_tier": false,
+          "silhouette": 0.157758467025795,
+          "warnings": []
+        },
+        "cost_inverted_minmax": {
+          "cluster_to_tiers": {
+            "0": [
+              "Acceptable"
+            ],
+            "1": [
+              "Preferred"
+            ],
+            "2": [
+              "At-Risk"
+            ]
+          },
+          "all_clusters_single_tier": true,
+          "silhouette": 0.45486184846363087,
+          "warnings": []
+        }
+      }
+    },
+    "supplier_source": {
+      "order_date_range": [
+        "2023-01-01",
+        "2024-12-30"
+      ],
+      "actual_delivery_range": [
+        "2023-01-18",
+        "2025-03-25"
+      ],
+      "aggregate_max_differences": {
+        "n_orders": 0.0,
+        "on_time_rate": 9.71445146547012e-17,
+        "avg_fulfillment_rate": 0.0,
+        "avg_price_variance_pct": 2.7755575615628914e-17,
+        "avg_defect_rate": 9.71445146547012e-17
+      }
+    },
+    "demand_prediction": {
+      "finite": true,
+      "nonnegative": true,
+      "n": 1020,
+      "test_date_range": [
+        "2024-11-11",
+        "2024-12-31"
+      ],
+      "reconstructed_metrics": {
+        "MAE": 21.296590940103343,
+        "RMSE": 40.70701683239616,
+        "MAPE": 33.65539867088806
+      },
+      "reported_metrics": {
+        "MAE": 21.296590940103343,
+        "RMSE": 40.70701683239616,
+        "MAPE": 33.655398670888054
+      },
+      "metric_differences": {
+        "MAE": 0.0,
+        "RMSE": 0.0,
+        "MAPE": 7.105427357601002e-15
+      },
+      "note": "Reconstruction from earlier notebook's split. This does not establish an untouched test or multi-step forecast validity."
+    },
+    "reorder_prediction": {
+      "finite": true,
+      "n": 900,
+      "reconstructed_metrics": {
+        "precision": 0.5701754385964912,
+        "recall": 0.8024691358024691,
+        "f1": 0.6666666666666666,
+        "roc_auc": 0.9628725184280739,
+        "pr_auc": 0.809980013986864
+      },
+      "reported_metrics": {
+        "precision": 0.5701754385964912,
+        "recall": 0.8024691358024691,
+        "f1": 0.6666666666666666,
+        "roc_auc": 0.9628725184280739,
+        "pr_auc": 0.809980013986864
+      },
+      "metric_differences": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "roc_auc": 0.0,
+        "pr_auc": 0.0
+      },
+      "confusion_tn_fp_fn_tp": [
+        770,
+        49,
+        16,
+        65
+      ],
+      "default_0_5_recall": 0.6172839506172839,
+      "labels_changed_from_0_5": 57,
+      "observed_categories": [
+        "Analgesic/Anti-inflammatory",
+        "Analgesic/Antipyretic",
+        "Antibiotic",
+        "Antidiabetic",
+        "Antihypertensive",
+        "Antimalarial",
+        "Antiretroviral",
+        "Antituberculosis",
+        "Gastrointestinal",
+        "Respiratory",
+        "Supplement"
+      ],
+      "n_zero_demand": 34,
+      "note": "Diagnostic reconstruction only. Exact feature code and tie ordering require the final notebook."
+    },
+    "reorder_threshold_precision": {
+      "within_1e_12_of_threshold": [
+        {
+          "risk_check_id": 1976,
+          "label": 1,
+          "score": 0.12461645022709879,
+          "difference_from_threshold": 0.0
+        }
+      ],
+      "serial_max_score_difference": 2.220446049250313e-16,
+      "serial_recall": 0.8024691358024691,
+      "serial_boundary_scores": [
+        0.12461645022709879
+      ],
+      "diagnostic_rounded_12dp_recall": 0.8024691358024691,
+      "note": "Rounding is diagnostic only, not an approved deployment policy or modification of the saved threshold."
+    },
+    "uploaded_files_unchanged": true
+  }
+}

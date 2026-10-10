@@ -1,0 +1,28 @@
+{
+  "input": {
+    "medicine_id": 2.0,
+    "current_stock_level": 3875.0,
+    "avg_daily_demand": 86.0,
+    "demand_std_dev": 31.27,
+    "lead_time_days": 14.0,
+    "lead_time_variability": 2.88,
+    "days_of_stock_remaining": 45.06,
+    "reorder_already_placed": 1.0,
+    "demand_cv": 0.36360465116279067,
+    "lead_time_margin": 31.060000000000002,
+    "lead_time_cv": 0.2057142857142857,
+    "cat_Analgesic/Antipyretic": 0.0,
+    "cat_Antibiotic": 0.0,
+    "cat_Antidiabetic": 0.0,
+    "cat_Antihypertensive": 0.0,
+    "cat_Antimalarial": 0.0,
+    "cat_Antiretroviral": 0.0,
+    "cat_Antituberculosis": 0.0,
+    "cat_Gastrointestinal": 0.0,
+    "cat_Respiratory": 0.0,
+    "cat_Supplement": 0.0
+  },
+  "risk_score": 0.007914578024179579,
+  "threshold": 0.12461645022709879,
+  "at_risk": false
+}

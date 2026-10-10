@@ -25,9 +25,9 @@ export function describeError(error: unknown): { title: string; detail: string }
       return { title: "The request timed out", detail: "The server took too long to respond." };
     switch (error.status) {
       case 400:
-        return { title: "Invalid request", detail: "Some of the submitted values were not accepted." };
+        return { title: "Invalid request", detail: error.message || "Some of the submitted values were not accepted." };
       case 401:
-        return { title: "Session expired", detail: "Please sign in again to continue." };
+        return { title: error.message === "Wrong password." ? "Wrong password" : "Sign-in failed", detail: error.message || "Please check your credentials and try again." };
       case 403:
         return { title: "Access denied", detail: "Your role does not permit this action." };
       case 404:
@@ -133,7 +133,16 @@ export async function request<T>(path: string, options: RequestOptions = {}): Pr
     }
   }
 
-  if (!response.ok) throw new ApiError(`Request failed with status ${response.status}`, response.status);
+  if (!response.ok) {
+    let message = `Request failed with status ${response.status}`;
+    try {
+      const payload = (await response.clone().json()) as { detail?: string; fields?: Record<string, string[]>; fieldErrors?: Record<string, string[]> };
+      const fields = payload.fields ?? payload.fieldErrors;
+      const firstField = fields && Object.values(fields).flat()[0];
+      message = firstField ?? payload.detail ?? message;
+    } catch { /* non-JSON error response */ }
+    throw new ApiError(message, response.status);
+  }
   if (response.status === 204) return undefined as T;
   return (await response.json()) as T;
 }

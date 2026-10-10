@@ -1,0 +1,145 @@
+{
+  "batch_expiry_dataset.csv": {
+    "rows": 6000,
+    "columns": [
+      "batch_id",
+      "medicine_id",
+      "medicine_name",
+      "category",
+      "manufacture_date",
+      "expiry_date",
+      "batch_quantity_received",
+      "check_date",
+      "current_batch_stock",
+      "days_to_expiry",
+      "avg_monthly_consumption_rate",
+      "estimated_days_to_deplete",
+      "storage_condition",
+      "at_risk_label"
+    ],
+    "missing": 0,
+    "duplicates": 0,
+    "manufacture_date": [
+      "2022-01-01",
+      "2024-06-18"
+    ],
+    "expiry_date": [
+      "2023-07-05",
+      "2027-06-17"
+    ],
+    "check_date": [
+      "2022-07-05",
+      "2027-02-15"
+    ],
+    "storage_condition": {
+      "Ambient": 5700,
+      "Cold-chain": 300
+    },
+    "at_risk_label": {
+      "0": 4174,
+      "1": 1826
+    },
+    "medicine_id_unique": 20,
+    "batch_id_unique": 6000,
+    "rule_agreement": 0.9553333333333334,
+    "days_date_mismatch": 0,
+    "stock_exceeds_received": 0
+  },
+  "demand_transactions.csv": {
+    "rows": 7320,
+    "columns": [
+      "transaction_date",
+      "medicine_id",
+      "medicine_name",
+      "category",
+      "quantity_dispensed",
+      "unit_price",
+      "opening_stock",
+      "closing_stock",
+      "stockout_flag",
+      "season_period",
+      "is_public_holiday"
+    ],
+    "missing": 0,
+    "duplicates": 0,
+    "transaction_date": [
+      "2024-01-01",
+      "2024-12-31"
+    ],
+    "stockout_flag": {
+      "0": 6960,
+      "1": 360
+    },
+    "medicine_id_unique": 20
+  },
+  "reorder_risk_dataset.csv": {
+    "rows": 6000,
+    "columns": [
+      "risk_check_id",
+      "medicine_id",
+      "medicine_name",
+      "category",
+      "check_date",
+      "current_stock_level",
+      "avg_daily_demand",
+      "demand_std_dev",
+      "lead_time_days",
+      "lead_time_variability",
+      "days_of_stock_remaining",
+      "reorder_already_placed",
+      "stockout_occurred"
+    ],
+    "missing": 0,
+    "duplicates": 0,
+    "check_date": [
+      "2024-02-15",
+      "2024-12-12"
+    ],
+    "stockout_occurred": {
+      "0": 5413,
+      "1": 587
+    },
+    "medicine_id_unique": 20,
+    "duplicate_medicine_date": 1789
+  },
+  "supplier_performance.csv": {
+    "rows": 6000,
+    "columns": [
+      "order_id",
+      "supplier_id",
+      "supplier_name",
+      "supplier_type",
+      "order_date",
+      "promised_delivery_date",
+      "actual_delivery_date",
+      "delivery_delay_days",
+      "order_quantity",
+      "delivered_quantity",
+      "quantity_fulfillment_rate",
+      "unit_price",
+      "market_avg_price",
+      "price_variance_pct",
+      "rejected_units",
+      "defect_rate",
+      "medicine_id",
+      "medicine_name",
+      "medicine_category"
+    ],
+    "missing": 0,
+    "duplicates": 0,
+    "order_date": [
+      "2023-01-01",
+      "2024-12-30"
+    ],
+    "promised_delivery_date": [
+      "2023-01-15",
+      "2025-02-13"
+    ],
+    "actual_delivery_date": [
+      "2023-01-18",
+      "2025-03-25"
+    ],
+    "medicine_id_unique": 20,
+    "supplier_id_unique": 12
+  }
+}

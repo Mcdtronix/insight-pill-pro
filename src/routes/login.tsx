@@ -22,18 +22,11 @@ export const Route = createFileRoute("/login")({
   component: LoginPage,
 });
 
-const DEMO_ACCOUNTS = [
-  { username: "admin", label: "Administrator" },
-  { username: "manager", label: "Pharmacy Manager" },
-  { username: "pharmacist", label: "Pharmacist" },
-  { username: "staff", label: "Staff" },
-];
-
 function LoginPage() {
   const { login, status } = useAuth();
   const navigate = useNavigate();
-  const [username, setUsername] = useState("manager");
-  const [password, setPassword] = useState("manager");
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -93,11 +86,12 @@ function LoginPage() {
 
           <form className="mt-8 space-y-4" onSubmit={onSubmit}>
             <div className="space-y-1.5">
-              <Label htmlFor="username">Username</Label>
+              <Label htmlFor="username">Email address</Label>
               <Input
                 id="username"
                 value={username}
-                autoComplete="username"
+                type="email"
+                autoComplete="email"
                 onChange={(event) => setUsername(event.target.value)}
                 required
               />
@@ -134,22 +128,6 @@ function LoginPage() {
               <p className="mt-1 text-xs text-muted-foreground">
                 No backend configured — data is served locally. Password matches the username.
               </p>
-              <div className="mt-3 flex flex-wrap gap-2">
-                {DEMO_ACCOUNTS.map((account) => (
-                  <Button
-                    key={account.username}
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      setUsername(account.username);
-                      setPassword(account.username);
-                    }}
-                  >
-                    {account.label}
-                  </Button>
-                ))}
-              </div>
             </div>
           ) : null}
         </div>

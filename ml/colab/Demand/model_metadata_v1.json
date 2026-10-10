@@ -1,0 +1,47 @@
+{
+  "model_name": "Medicine Demand Forecasting Model",
+  "version": "v1",
+  "algorithm": "Random Forest (tuned via Optuna), selected by 5-fold CV in Section 7",
+  "trained_on": "2026-09-21",
+  "training_data": "demand_transactions.csv",
+  "training_date_range": [
+    "2024-01-31",
+    "2024-12-31"
+  ],
+  "n_training_rows": 5700,
+  "n_test_rows": 1020,
+  "feature_columns": [
+    "medicine_id",
+    "category_enc",
+    "season_enc",
+    "day_of_week",
+    "month",
+    "is_weekend",
+    "is_public_holiday",
+    "lag_1",
+    "lag_7",
+    "lag_14",
+    "lag_30",
+    "rolling_mean_7",
+    "rolling_mean_30",
+    "rolling_std_7"
+  ],
+  "target_column": "quantity_dispensed",
+  "hyperparameters": {
+    "n_estimators": 750,
+    "max_depth": 9,
+    "min_samples_leaf": 2,
+    "max_features": 0.7120505288795979
+  },
+  "test_metrics": {
+    "MAE": 21.296590940103343,
+    "RMSE": 40.70701683239616,
+    "MAPE": 33.655398670888054
+  },
+  "known_limitations": [
+    "Demand on stockout-flagged days is censored (understated); model error is expected to be higher on these days and this should not be read as general underperformance.",
+    "Model trained on one calendar year (2024) of simulated data; does not yet span multiple years, so year-over-year trend effects are not learned.",
+    "Global model shares parameters across all 20 medicines; a very new medicine with no lag history cannot yet be forecast by this version."
+  ],
+  "retraining_recommendation": "Retrain monthly as new dispensing data accumulates, or immediately if MAE on live data drifts more than 20% above this test MAE."
+}

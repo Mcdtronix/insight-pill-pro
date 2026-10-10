@@ -1,0 +1,63 @@
+{
+  "model_name": "Stockout Risk / Reorder Trigger Classification Model",
+  "version": "v1",
+  "algorithm": "Random Forest (untuned defaults \u2014 tuning was attempted but did not improve test performance)",
+  "trained_on": "2026-09-21",
+  "training_data": "reorder_risk_dataset.csv",
+  "training_date_range": [
+    "2024-02-15",
+    "2024-12-12"
+  ],
+  "n_training_rows": 5100,
+  "n_test_rows": 900,
+  "positive_class_rate": 0.09783333333333333,
+  "feature_columns": [
+    "medicine_id",
+    "current_stock_level",
+    "avg_daily_demand",
+    "demand_std_dev",
+    "lead_time_days",
+    "lead_time_variability",
+    "days_of_stock_remaining",
+    "reorder_already_placed",
+    "demand_cv",
+    "lead_time_margin",
+    "lead_time_cv",
+    "cat_Analgesic/Antipyretic",
+    "cat_Antibiotic",
+    "cat_Antidiabetic",
+    "cat_Antihypertensive",
+    "cat_Antimalarial",
+    "cat_Antiretroviral",
+    "cat_Antituberculosis",
+    "cat_Gastrointestinal",
+    "cat_Respiratory",
+    "cat_Supplement"
+  ],
+  "target_column": "stockout_occurred",
+  "requires_scaler": false,
+  "hyperparameters": {
+    "n_estimators": 300,
+    "max_depth": 8,
+    "min_samples_leaf": 5,
+    "class_weight": "balanced",
+    "random_state": 42,
+    "n_jobs": -1
+  },
+  "decision_threshold": 0.12461645022709879,
+  "threshold_target_recall": 0.8,
+  "test_metrics": {
+    "precision": 0.5701754385964912,
+    "recall": 0.8024691358024691,
+    "f1": 0.6666666666666666,
+    "roc_auc": 0.9628725184280739,
+    "pr_auc": 0.809980013986864
+  },
+  "known_limitations": [
+    "Trained on one calendar year of simulated snapshots; class balance and seasonal risk patterns may shift with real, multi-year data.",
+    "Any category with zero recall in the Section 8 stress test (see category_stress) is a blind spot this version cannot yet catch and must be disclosed explicitly, not averaged away.",
+    "The 80% recall operating threshold is a starting point, not a clinically or operationally validated target \u2014 revisit with pharmacy staff once piloted against real outcomes.",
+    "Positive class is rare (~9.8%); confidence in the exact PR-AUC figure should be treated as approximate until validated on more data."
+  ],
+  "retraining_recommendation": "Retrain whenever real stockout outcome data becomes available, and re-derive the decision threshold rather than reusing this one, since the precision/recall trade-off is data-dependent."
+}

@@ -5,17 +5,17 @@ import { request } from "./client";
 
 export const recommendationApi = {
   list: (): Promise<ReorderRecommendation[]> =>
-    config.useMock ? mockApi.recommendations() : request<ReorderRecommendation[]>("/recommendations/reorder/"),
+    config.useMock ? mockApi.recommendations() : request<ReorderRecommendation[]>("/recommendations/"),
 
   detail: (id: string): Promise<ReorderRecommendation> =>
     config.useMock
       ? mockApi.recommendation(id)
-      : request<ReorderRecommendation>(`/recommendations/reorder/${id}/`),
+      : request<ReorderRecommendation>(`/recommendations/${id}/`),
 
   approve: (id: string, quantity?: number): Promise<ReorderRecommendation> =>
     config.useMock
       ? mockApi.approveRecommendation(id, quantity)
-      : request<ReorderRecommendation>(`/recommendations/reorder/${id}/approve/`, {
+      : request<ReorderRecommendation>(`/recommendations/${id}/approve/`, {
           method: "POST",
           body: { quantity },
         }),
@@ -23,5 +23,5 @@ export const recommendationApi = {
   reject: (id: string): Promise<ReorderRecommendation> =>
     config.useMock
       ? mockApi.rejectRecommendation(id)
-      : request<ReorderRecommendation>(`/recommendations/reorder/${id}/reject/`, { method: "POST" }),
+      : request<ReorderRecommendation>(`/recommendations/${id}/reject/`, { method: "POST" }),
 };

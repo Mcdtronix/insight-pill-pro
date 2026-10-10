@@ -1,0 +1,19 @@
+{
+  "input": {
+    "medicine_id": 1.0,
+    "category_enc": 1.0,
+    "season_enc": 1.0,
+    "day_of_week": 0.0,
+    "month": 11.0,
+    "is_weekend": 0.0,
+    "is_public_holiday": 0.0,
+    "lag_1": 87.0,
+    "lag_7": 108.0,
+    "lag_14": 183.0,
+    "lag_30": 175.0,
+    "rolling_mean_7": 145.0,
+    "rolling_mean_30": 156.36666666666667,
+    "rolling_std_7": 42.708313008125565
+  },
+  "prediction": 167.4709523521713
+}

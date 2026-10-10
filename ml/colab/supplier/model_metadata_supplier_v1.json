@@ -1,0 +1,38 @@
+{
+  "model_name": "Supplier Performance Scoring Model",
+  "version": "v1",
+  "approach": "Weighted scoring model (primary, explainable) + K-Means clustering (k=3) for tiering",
+  "trained_on": "2026-09-21",
+  "training_data": "supplier_performance.csv",
+  "n_orders_used": 6000,
+  "n_suppliers": 12,
+  "score_features": [
+    "on_time_rate",
+    "avg_fulfillment_rate",
+    "avg_price_variance_pct",
+    "avg_defect_rate"
+  ],
+  "weights": {
+    "on_time_rate": 0.35,
+    "avg_fulfillment_rate": 0.3,
+    "avg_price_variance_pct": 0.2,
+    "avg_defect_rate": 0.15
+  },
+  "kmeans_k": 3,
+  "validation_metrics": {
+    "silhouette_score_k3": 0.45486184846363037,
+    "adjusted_rand_index_vs_hierarchical": 1.0,
+    "mean_rank_correlation_under_weight_perturbation": 0.9936503496503499,
+    "min_rank_correlation_under_weight_perturbation": 0.9720279720279721
+  },
+  "low_confidence_suppliers": [
+    "Ajanta Pharma"
+  ],
+  "known_limitations": [
+    "Unsupervised scoring - there is no ground-truth 'correct' supplier ranking to validate against; validation relies on internal cluster quality, cross-method agreement, and resampling stability instead of accuracy.",
+    "Only 12 suppliers - clustering metrics (silhouette, Calinski-Harabasz) are inherently less stable at this sample size than they would be with dozens of suppliers.",
+    "Suppliers with fewer than 150 orders (see low_confidence_suppliers) have noisier aggregate metrics and their tier assignment should be treated as provisional.",
+    "Trained on one year of simulated order data; supplier performance in reality can drift, so periodic re-scoring is required, not a one-time classification."
+  ],
+  "retraining_recommendation": "Recompute quarterly as new orders accumulate, and re-run the bootstrap stability check each time - a supplier whose stability_pct drops sharply between runs is worth investigating before trusting its new tier."
+}
