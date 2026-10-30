@@ -7,7 +7,18 @@ from django.core.exceptions import ImproperlyConfigured
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 PROJECT_DIR = BASE_DIR.parent
-DEBUG = os.getenv("DJANGO_DEBUG", "true").lower() == "true"
+
+# Load backend/.env (gitignored) so local settings such as DSS_DEMO_DATE persist
+# between runs. Real environment variables always win.
+_env_file = BASE_DIR / ".env"
+if _env_file.exists():
+    for _line in _env_file.read_text(encoding="utf-8").splitlines():
+        _line = _line.strip()
+        if _line and not _line.startswith("#") and "=" in _line:
+            _key, _value = _line.split("=", 1)
+            os.environ.setdefault(_key.strip(), _value.strip())
+
+DEBUG =os.getenv("DJANGO_DEBUG", "true").lower() == "true"
 SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "")
 if not SECRET_KEY:
     if not DEBUG:
@@ -79,6 +90,7 @@ STATIC_URL = "static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 MODEL_ROOT = Path(os.getenv("MODEL_ROOT", str(PROJECT_DIR / "ml")))
+DATA_ROOT = Path(os.getenv("DATA_ROOT", str(PROJECT_DIR / "ml" / "data")))
 DSS_DEMO_DATE = os.getenv("DSS_DEMO_DATE", "")
 if DSS_DEMO_DATE and not DEBUG:
     raise ImproperlyConfigured("Historical demonstration mode requires DEBUG=true")

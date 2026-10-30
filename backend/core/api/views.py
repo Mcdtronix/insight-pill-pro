@@ -9,6 +9,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from core.models import Medicine, Batch, StockMovement, Recommendation, Supplier, Notification, Report, PurchaseOrder, SupplierDelivery
 from core.services.ml import demand_forecast
+from core.services.clock import today
 from core.api.errors import ModelUnavailable
 from .permissions import RolePermission
 
@@ -87,7 +88,7 @@ class InventoryHealthView(APIView):
 class InventoryTrendView(APIView):
     required_permission="inventory.view"
     def get(self, request):
-        now = timezone.now().date()
+        now = today()
         months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
         out = []
         meds = list(Medicine.objects.filter(active=True).prefetch_related("batches"))
@@ -108,7 +109,7 @@ class InventoryTrendView(APIView):
 class ExpiryRiskView(APIView):
     required_permission="inventory.view"
     def get(self, request):
-        now = timezone.now().date()
+        now = today()
         batches = Batch.objects.filter(quarantined=False, quantity__gt=0).select_related("medicine", "supplier").order_by("expiry_date")[:100]
         out = []
         for b in batches:
@@ -202,7 +203,7 @@ class RecommendationActionView(APIView):
         if action!="approve": return Response({"code":"validation_error","detail":"Action is invalid."},status=400)
         qty=int(request.data.get("quantity",r.quantity)); offer=r.offer
         if not offer:return Response({"code":"conflict","detail":"No active supplier offer is attached."},status=409)
-        po=PurchaseOrder.objects.create(recommendation=r,offer=offer,quantity=qty,unit_cost=offer.unit_cost,expected_at=timezone.now().date(),created_by=request.user)
+        po=PurchaseOrder.objects.create(recommendation=r,offer=offer,quantity=qty,unit_cost=offer.unit_cost,expected_at=today(),created_by=request.user)
         r.status="approved"; r.decided_by=request.user; r.decided_at=timezone.now(); r.save(update_fields=["status","decided_by","decided_at"])
         return Response({"status":"approved","purchaseOrderId":str(po.id)})
 
@@ -223,7 +224,7 @@ class SupplierPerformanceView(APIView):
 class DashboardView(APIView):
     required_permission="inventory.view"
     def get(self, request):
-        now = timezone.now().date()
+        now = today()
         meds = list(Medicine.objects.filter(active=True).prefetch_related("batches"))
         total_medicines = len(meds)
         total_stock = 0
@@ -278,7 +279,7 @@ class DashboardView(APIView):
 class InsightView(APIView):
     required_permission="inventory.view"
     def get(self, request):
-        now = timezone.now().date()
+        now = today()
         insights = []
         low_meds = [m for m in Medicine.objects.filter(active=True) if sum(b.quantity for b in m.batches.filter(quarantined=False)) < 50][:2]
         for m in low_meds:
