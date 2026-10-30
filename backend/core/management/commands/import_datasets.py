@@ -170,6 +170,7 @@ class Command(BaseCommand):
             ignore_conflicts=True)
         rows = [DailyDemand(medicine=meds[int(r.medicine_id)], date=r.transaction_date.date(),
                             quantity=int(r.quantity_dispensed), stockout=bool(r.stockout_flag),
+                            closing_stock=int(r.closing_stock),
                             complete=True, holiday=bool(r.is_public_holiday), season=r.season_period,
                             source=SOURCE)
                 for r in demand.itertuples()]

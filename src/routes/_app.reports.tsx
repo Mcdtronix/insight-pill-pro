@@ -1,11 +1,12 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { Download } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 import { describeError } from "@/api/client";
-import { reportApi, type ReportRequest, type ReportResult, type ReportType } from "@/api/reportApi";
+import { reportApi, systemApi, type ReportRequest, type ReportResult, type ReportType } from "@/api/reportApi";
+import { config } from "@/lib/config";
 import { supplierApi } from "@/api/supplierApi";
 import { DecisionChain } from "@/components/common/DecisionChain";
 import { PageHeader } from "@/components/common/PageHeader";
@@ -62,6 +63,17 @@ function ReportsPage() {
   const [format, setFormat] = useState<"csv" | "pdf">("csv");
   const [result, setResult] = useState<ReportResult | null>(null);
 
+  // Default the period to the 30 days before the system's "today" (the demo date in demo mode).
+  const health = useQuery({ queryKey: ["health"], queryFn: systemApi.health, enabled: !config.useMock });
+  useEffect(() => {
+    if (!health.data?.today) return;
+    const end = new Date(`${health.data.today}T00:00:00`);
+    const start = new Date(end);
+    start.setDate(start.getDate() - 30);
+    setTo(health.data.today);
+    setFrom(start.toISOString().slice(0, 10));
+  }, [health.data?.today]);
+
   const generate = useMutation({
     mutationFn: (payload: ReportRequest) => reportApi.generate(payload),
     onSuccess: (data) => {
@@ -92,11 +104,20 @@ function ReportsPage() {
 
   const download = () => {
     if (!result) return;
-    const blob = new Blob([JSON.stringify(result, null, 2)], { type: "application/json" });
+    let blob: Blob;
+    let filename = `${type}-${from}-to-${to}.json`;
+    if (result.contentBase64 && result.filename) {
+      // Real CSV or PDF file built by the backend.
+      const bytes = Uint8Array.from(atob(result.contentBase64), (c) => c.charCodeAt(0));
+      blob = new Blob([bytes], { type: result.mimeType ?? "application/octet-stream" });
+      filename = result.filename;
+    } else {
+      blob = new Blob([JSON.stringify(result, null, 2)], { type: "application/json" });
+    }
     const url = URL.createObjectURL(blob);
     const anchor = document.createElement("a");
     anchor.href = url;
-    anchor.download = `${type}-${from}-to-${to}.${format === "csv" ? "csv" : "pdf"}.json`;
+    anchor.download = filename;
     anchor.click();
     URL.revokeObjectURL(url);
   };

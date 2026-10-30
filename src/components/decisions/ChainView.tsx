@@ -108,7 +108,12 @@ function StepDetails({ step, d }: { step: number; d: Details }) {
             ],
             ["Demand over lead time", num(d["forecastLeadTime"])],
             ["Forecast daily average", num(d["forecastDailyAvg"], 1)],
-            ["Last 30 days daily average", num(d["recentDailyAvg"], 1)],
+            [
+              Number(d["stockoutDaysLast30"] ?? 0) > 0
+                ? `Recent daily average (${num(d["stockoutDaysLast30"])} stockout days excluded)`
+                : "Last 30 days daily average",
+              num(d["recentDailyAvg"], 1),
+            ],
           ]}
         />
         <div>

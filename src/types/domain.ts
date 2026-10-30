@@ -39,7 +39,8 @@ export interface InventoryItem {
   supplierId: string;
   supplierName: string;
   unitCost: number;
-  earliestExpiry: string;
+  /** Null when the medicine has no stock left. */
+  earliestExpiry: string | null;
   status: StockStatus;
 }
 

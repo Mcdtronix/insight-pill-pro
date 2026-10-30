@@ -2,7 +2,7 @@ from django.urls import path
 from .decision_views import DecisionRunView, DispenseView
 from .lab_views import LabActionView, LabModelsView
 from .views import (
-    HealthView, MedicineListView, MedicineDetailView, MedicineForecastView,
+    HealthView, MedicineListView, MedicineDetailView, MedicineForecastView, MedicineTransactionsView, SearchView,
     InventoryView, InventoryDetailView, InventoryHealthView, InventoryTrendView, ExpiryRiskView, StockMovementView,
     RecommendationListView, RecommendationDetailView, RecommendationActionView,
     SupplierListView, SupplierPerformanceView, DashboardView, InsightView,
@@ -14,6 +14,8 @@ urlpatterns = [
     path("medicines/", MedicineListView.as_view()),
     path("medicines/<int:pk>/", MedicineDetailView.as_view()),
     path("medicines/<int:pk>/forecast/", MedicineForecastView.as_view()),
+    path("medicines/<int:pk>/transactions/", MedicineTransactionsView.as_view()),
+    path("search/", SearchView.as_view()),
     path("inventory/", InventoryView.as_view()),
     path("inventory/health/", InventoryHealthView.as_view()),
     path("inventory/trend/", InventoryTrendView.as_view()),

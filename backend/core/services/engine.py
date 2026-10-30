@@ -109,11 +109,32 @@ def forecast_many(histories, start, horizon, holidays):
     return out
 
 
+def demand_stats(recent):
+    """Mean and std of daily demand, ignoring stockout days.
+
+    On a stockout day nothing could be dispensed, so the recorded zero hides the true
+    demand (censoring). Uses the last 30 days without stockouts, widening to 60 days
+    when fewer than 10 clean days remain. Returns (mean, std, stockout days in last 30).
+    """
+    last30 = recent[-30:]
+    censored = sum(1 for _, s in last30 if s)
+    clean = [q for q, s in last30 if not s]
+    if len(clean) < 10:
+        clean = [q for q, s in recent if not s]
+    if len(clean) < 5:
+        clean = [q for q, _ in last30]
+    arr = np.array(clean, dtype=float)
+    return float(arr.mean()), float(arr.std(ddof=1)) if len(arr) > 1 else 0.0, censored
+
+
 # ------------------------------------------------------------------ step 4
 def fefo_expiry(batches, daily_forecast, as_of):
-    """Use batches earliest-expiry-first against the forecast; return units that expire unused."""
-    remaining = [[b, b.quantity] for b in sorted(batches, key=lambda b: b.expiry_date)]
-    expiring, detail = 0, []
+    """Use batches earliest-expiry-first against the forecast.
+
+    Returns (units expected to expire unused, at-risk batch detail, per-batch outcome for every batch).
+    """
+    remaining = [[b, b.quantity] for b in sorted(batches, key=lambda b: (b.expiry_date, b.id))]
+    expiring, detail, per_batch = 0, [], []
     day = 0
     avg = float(np.mean(daily_forecast)) if daily_forecast else 0.0
     for b, qty in remaining:
@@ -127,8 +148,12 @@ def fefo_expiry(batches, daily_forecast, as_of):
             expiring += unused
             detail.append({"batch": b.number, "expiryDate": b.expiry_date.isoformat(), "daysToExpiry": days_left,
                            "units": int(qty), "expectedUnused": int(round(unused))})
+        per_batch.append({"batchId": b.id, "batch": b.number, "expiryDate": b.expiry_date.isoformat(),
+                          "daysToExpiry": days_left, "units": int(qty), "expectedUsed": int(round(used)),
+                          "expectedUnused": int(round(unused)), "unitCost": float(b.unit_cost),
+                          "startsInDays": int(day)})
         day += _days_to_consume(daily_forecast, avg, day, used)
-    return int(round(expiring)), detail
+    return int(round(expiring)), detail, per_batch
 
 
 def _demand_between(fc, avg, a, b):
@@ -166,8 +191,9 @@ def run(model_ids=None, user=None, save=True):
 
     plans, histories = {}, {}
     for m in meds:
-        hist = list(DailyDemand.objects.filter(medicine=m, date__lte=as_of).order_by("-date")
-                    .values_list("quantity", flat=True)[:30])[::-1]
+        recent = list(DailyDemand.objects.filter(medicine=m, date__lte=as_of).order_by("-date")
+                      .values_list("quantity", "stockout")[:60])[::-1]
+        hist = [q for q, _ in recent[-30:]]
         if len(hist) < 30:
             continue
         offers = list(SupplierOffer.objects.filter(medicine=m, active=True).select_related("supplier"))
@@ -175,7 +201,8 @@ def run(model_ids=None, user=None, save=True):
         if offer is None:
             continue
         lead = int(offer.lead_time_days) + int(policy.lead_time_buffer)
-        plans[m.model_id] = {"medicine": m, "offer": offer, "ranked": ranked, "lead": lead, "history": hist}
+        plans[m.model_id] = {"medicine": m, "offer": offer, "ranked": ranked, "lead": lead, "history": hist,
+                             "demand_stats": demand_stats(recent)}
         histories[m.model_id] = (int(category_enc.transform([m.category])[0]), hist)
 
     horizon = min(MAX_COVER_DAYS, max([p["lead"] + policy.review_period for p in plans.values()] or [1]))
@@ -185,8 +212,7 @@ def run(model_ids=None, user=None, save=True):
     for mid, p in plans.items():
         m, offer, lead = p["medicine"], p["offer"], p["lead"]
         fc = forecasts[mid]
-        hist = np.array(p["history"], dtype=float)
-        mean_30, std_30 = float(hist.mean()), float(hist.std(ddof=1))
+        mean_30, std_30, censored_days = p["demand_stats"]
         demand_lead = float(sum(fc[:lead]))
         demand_cycle = float(sum(fc[:lead + policy.review_period]))
         daily_fc = demand_cycle / (lead + policy.review_period)
@@ -196,7 +222,7 @@ def run(model_ids=None, user=None, save=True):
 
         batches = list(Batch.objects.filter(medicine=m, quarantined=False, quantity__gt=0))
         on_hand = sum(b.quantity for b in batches)
-        expiring, expiry_detail = fefo_expiry(batches, fc, as_of)
+        expiring, expiry_detail, per_batch = fefo_expiry(batches, fc, as_of)
         open_pos = PurchaseOrder.objects.filter(offer__medicine=m, status__in=["pending", "partial"])
         on_order = int(sum(po.quantity - po.received_units for po in open_pos))
         usable = on_hand - expiring
@@ -206,8 +232,8 @@ def run(model_ids=None, user=None, save=True):
                          bool(open_pos))
         rows_for_risk.append((mid, x))
         p.update(fc=fc, mean_30=mean_30, std_30=std_30, demand_lead=demand_lead, demand_cycle=demand_cycle,
-                 daily_fc=daily_fc, safety=safety, rop=rop, order_up_to=order_up_to, on_hand=on_hand,
-                 expiring=expiring, expiry_detail=expiry_detail, on_order=on_order, usable=usable,
+                 daily_fc=daily_fc, censored_days=censored_days, safety=safety, rop=rop, order_up_to=order_up_to, on_hand=on_hand,
+                 expiring=expiring, expiry_detail=expiry_detail, per_batch=per_batch, on_order=on_order, usable=usable,
                  position=position, risk_x=x)
 
     if rows_for_risk:
@@ -297,7 +323,7 @@ def _decide(p, policy, threshold, scores, as_of):
          "details": {"leadTimeDays": p["lead"], "supplierLeadTime": offer.lead_time_days,
                      "bufferDays": policy.lead_time_buffer, "forecastLeadTime": round(p["demand_lead"], 1),
                      "forecastCycle": round(p["demand_cycle"], 1), "forecastDailyAvg": round(p["daily_fc"], 1),
-                     "recentDailyAvg": round(p["mean_30"], 1),
+                     "recentDailyAvg": round(p["mean_30"], 1), "stockoutDaysLast30": p["censored_days"],
                      "next14Days": [round(v, 1) for v in p["fc"][:14]]}},
         {"step": 3, "model": "Inventory policy", "summary": f"Reorder point {p['rop']:,.0f} units",
          "details": {"safetyStock": round(p["safety"]), "reorderPoint": round(p["rop"]),
@@ -327,6 +353,9 @@ def _decide(p, policy, threshold, scores, as_of):
         "stockoutProbability": round(prob, 4), "stockoutRisk": "critical" if prob >= 0.5 else "high" if alert else "low",
         "daysUntilReorderPoint": days_to_rop, "expiringUnits": int(p["expiring"]),
         "rationale": " ".join(reasons), "chain": chain, "asOf": as_of.isoformat(),
+        "category": m.category, "recentDailyAvg": round(p["mean_30"], 2), "forecastDailyAvg": round(p["daily_fc"], 2),
+        "demandStd": round(p["std_30"], 2), "stockoutDaysLast30": p["censored_days"], "stockoutAlert": alert, "batches": p["per_batch"],
+        "supplierTier": sup.get("tier"), "supplierScore": sup.get("score"),
     }
 
 
@@ -346,11 +375,25 @@ def _save(results, plans, as_of, user):
             unit_cost=Decimal(str(r["unitCost"])), revision=state.revision, as_of=as_of, payload=r,
             reason=r["rationale"][:300])
         created += 1
+        if r["priority"] == "critical":
+            _notify(f"reorder:{r['medicineId']}:{as_of}:{state.revision}", "reorder", "critical",
+                    f"Reorder {r['medicineName']} now",
+                    f"{r['stockoutProbability']:.0%} stockout risk. Suggested order: {r['quantity']:,} units "
+                    f"from {r['supplierName']}.", "/recommendations")
     AuditEvent.objects.create(actor=user if getattr(user, "is_authenticated", False) else None,
                               action="decision_engine_run", entity="recommendation",
                               details={"asOf": as_of.isoformat(), "checked": len(results), "created": created,
                                        "revision": state.revision})
     return created
+
+
+def _notify(key, kind, severity, title, message, link):
+    """One notification per user who can act on recommendations."""
+    from accounts.models import User
+    from core.models import Notification
+    for user in User.objects.filter(is_active=True, role__in=["admin", "manager", "pharmacist"]):
+        Notification.objects.get_or_create(user=user, event_key=key[:150], defaults={
+            "kind": kind, "severity": severity, "title": title[:200], "message": message, "link": link})
 
 
 # ------------------------------------------------------- what-if: dispense
