@@ -7,7 +7,7 @@ from rest_framework import status
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from core.models import Medicine, Batch, StockMovement, Recommendation, Supplier, Notification, Report, PurchaseOrder, SupplierDelivery
+from core.models import Medicine, Batch, StockMovement, Recommendation, Supplier, Notification, Report, PurchaseOrder, SupplierDelivery, AuditEvent
 from core.services.ml import demand_forecast
 from core.services.clock import today
 from core.api.errors import ModelUnavailable
@@ -178,34 +178,79 @@ class StockMovementView(APIView):
             if b.pk==batch.pk:b.save(update_fields=["quantity"])
         return Response({"id":mv.id,"medicine":medicine_dict(batch.medicine)},status=201)
 
+PRIORITY_ORDER = {"critical": 0, "high": 1, "medium": 2, "low": 3}
+
+
+def recommendation_dict(r):
+    """A recommendation in the shape the frontend expects, built from the engine's stored payload."""
+    p = r.payload or {}
+    po = PurchaseOrder.objects.filter(recommendation=r).first()
+    unit = float(r.unit_cost)
+    prob = p.get("stockoutProbability", 0.0)
+    return {
+        "id": str(r.id), "medicineId": str(r.medicine_id), "medicineName": r.medicine.name,
+        "strength": r.medicine.strength or "", "currentStock": p.get("currentStock", 0),
+        "usableStock": p.get("usableStock"), "onOrder": p.get("onOrder", 0),
+        "reorderPoint": p.get("reorderPoint", 0), "predictedDemand": p.get("predictedDemand", 0),
+        "safetyStock": p.get("safetyStock", 0), "suggestedQuantity": r.quantity,
+        "supplierId": str(r.offer.supplier_id), "supplierName": r.offer.supplier.name,
+        "leadTimeDays": r.offer.lead_time_days, "unitCost": unit, "estimatedCost": round(r.quantity * unit, 2),
+        "priority": p.get("priority", "medium"), "confidence": round(prob * 100),
+        "stockoutProbability": prob, "stockoutRisk": p.get("stockoutRisk", "low"),
+        "daysUntilReorderPoint": p.get("daysUntilReorderPoint", 0), "expiringUnits": p.get("expiringUnits", 0),
+        "status": r.status, "rationale": r.reason or p.get("rationale", ""), "chain": p.get("chain", []),
+        "asOf": r.as_of.isoformat(), "decidedAt": r.decided_at.isoformat() if r.decided_at else None,
+        "decidedBy": (r.decided_by.get_full_name() or r.decided_by.email) if r.decided_by else None,
+        "purchaseOrderId": str(po.id) if po else None,
+    }
+
+
 class RecommendationListView(APIView):
     required_permission="recommendations.view"
     def get(self, request):
-        out=[]
-        for r in Recommendation.objects.select_related("medicine","offer__supplier").order_by("-created")[:500]: out.append({"id":str(r.id),"medicineId":r.medicine_id,"medicineName":r.medicine.name,"status":r.status,"quantity":r.quantity,"unitCost":float(r.unit_cost),"supplier":r.offer.supplier.name if r.offer else None,"reason":r.reason,"asOf":r.as_of_date.isoformat()})
-        return Response(out)
+        qs = (Recommendation.objects.exclude(status="superseded")
+              .select_related("medicine", "offer__supplier", "decided_by").order_by("-created_at")[:500])
+        rows = [recommendation_dict(r) for r in qs]
+        rows.sort(key=lambda x: (x["status"] != "pending", PRIORITY_ORDER.get(x["priority"], 9)))
+        return Response(rows)
 
 class RecommendationDetailView(APIView):
     required_permission="recommendations.view"
     def get(self, request, pk):
         try: r=Recommendation.objects.select_related("medicine","offer__supplier").get(pk=pk)
         except Recommendation.DoesNotExist:return Response({"code":"not_found","detail":"Recommendation was not found."},status=404)
-        return Response({"id":str(r.id),"medicineId":r.medicine_id,"medicineName":r.medicine.name,"status":r.status,"quantity":r.quantity,"unitCost":float(r.unit_cost),"supplier":r.offer.supplier.name if r.offer else None,"reason":r.reason,"asOf":r.as_of_date.isoformat()})
+        return Response(recommendation_dict(r))
 
 class RecommendationActionView(APIView):
     required_permission="recommendations.approve"
     @transaction.atomic
     def post(self, request, pk, action):
-        try:r=Recommendation.objects.select_for_update().get(pk=pk)
+        try:r=Recommendation.objects.select_for_update().select_related("medicine","offer__supplier").get(pk=pk)
         except Recommendation.DoesNotExist:return Response({"code":"not_found","detail":"Recommendation was not found."},status=404)
         if r.status != "pending": return Response({"code":"conflict","detail":"Recommendation is no longer pending."},status=409)
-        if action=="reject": r.status="rejected"; r.decided_by=request.user; r.decided_at=timezone.now(); r.save(update_fields=["status","decided_by","decided_at"]); return Response({"status":r.status})
-        if action!="approve": return Response({"code":"validation_error","detail":"Action is invalid."},status=400)
-        qty=int(request.data.get("quantity",r.quantity)); offer=r.offer
-        if not offer:return Response({"code":"conflict","detail":"No active supplier offer is attached."},status=409)
-        po=PurchaseOrder.objects.create(recommendation=r,offer=offer,quantity=qty,unit_cost=offer.unit_cost,expected_at=today(),created_by=request.user)
-        r.status="approved"; r.decided_by=request.user; r.decided_at=timezone.now(); r.save(update_fields=["status","decided_by","decided_at"])
-        return Response({"status":"approved","purchaseOrderId":str(po.id)})
+        if action not in {"approve", "reject"}: return Response({"code":"validation_error","detail":"Action is invalid."},status=400)
+        now = timezone.now()
+        if action == "reject":
+            r.status, r.decided_by, r.decided_at = "rejected", request.user, now
+            r.save(update_fields=["status","decided_by","decided_at"])
+            AuditEvent.objects.create(actor=request.user, action="reject_recommendation", entity=f"recommendation:{r.id}",
+                                      details={"medicine": r.medicine.name})
+            return Response(recommendation_dict(r))
+        try: qty=int(request.data.get("quantity", r.quantity))
+        except (TypeError, ValueError): return Response({"code":"validation_error","fields":{"quantity":["Enter a whole number."]}},status=400)
+        if qty < 1: return Response({"code":"validation_error","fields":{"quantity":["Quantity must be at least 1."]}},status=400)
+        offer = r.offer
+        placed = today()
+        po=PurchaseOrder.objects.create(recommendation=r, offer=offer, quantity=qty, unit_cost=offer.unit_cost,
+                                        placed_at=placed, expected_at=placed + timedelta(days=offer.lead_time_days),
+                                        created_by=request.user)
+        if qty != r.quantity:
+            r.quantity = qty
+        r.status, r.decided_by, r.decided_at = "approved", request.user, now
+        r.save(update_fields=["status","decided_by","decided_at","quantity"])
+        AuditEvent.objects.create(actor=request.user, action="approve_recommendation", entity=f"recommendation:{r.id}",
+                                  details={"medicine": r.medicine.name, "quantity": qty, "purchaseOrder": str(po.id)})
+        return Response(recommendation_dict(r))
 
 class SupplierListView(APIView):
     required_permission="suppliers.view"

@@ -1,4 +1,5 @@
 from django.urls import path
+from .decision_views import DecisionRunView, DispenseView
 from .lab_views import LabActionView, LabModelsView
 from .views import (
     HealthView, MedicineListView, MedicineDetailView, MedicineForecastView,
@@ -30,6 +31,8 @@ urlpatterns = [
     path("notifications/<int:pk>/read/", NotificationReadView.as_view()),
     path("notifications/read-all/", NotificationView.as_view()),
     path("reports/generate/", ReportView.as_view()),
+    path("decisions/run/", DecisionRunView.as_view()),
+    path("decisions/dispense/", DispenseView.as_view()),
     path("lab/models/", LabModelsView.as_view()),
     path("lab/<str:model>/<str:action>/", LabActionView.as_view()),
 ]

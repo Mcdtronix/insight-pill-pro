@@ -1,6 +1,6 @@
 import { config } from "@/lib/config";
 import { mockApi } from "@/mock/mockApi";
-import type { ReorderRecommendation } from "@/types/domain";
+import type { DecisionRun, ReorderRecommendation } from "@/types/domain";
 import { request } from "./client";
 
 export const recommendationApi = {
@@ -24,4 +24,12 @@ export const recommendationApi = {
     config.useMock
       ? mockApi.rejectRecommendation(id)
       : request<ReorderRecommendation>(`/recommendations/${id}/reject/`, { method: "POST" }),
+
+  /** Run all four models for every medicine and save fresh recommendations (backend only). */
+  runEngine: (medicineIds?: number[]): Promise<DecisionRun> =>
+    request<DecisionRun>("/decisions/run/", { method: "POST", body: medicineIds ? { medicineIds } : {} }),
+
+  /** What-if: dispense units first-expiry-first-out (backend only). */
+  dispense: (medicineId: number, quantity: number): Promise<{ medicineName: string; stockLeft: number }> =>
+    request("/decisions/dispense/", { method: "POST", body: { medicineId, quantity } }),
 };

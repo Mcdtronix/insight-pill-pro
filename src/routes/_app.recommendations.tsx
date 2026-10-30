@@ -7,6 +7,8 @@ import { recommendationApi } from "@/api/recommendationApi";
 import { DecisionChain } from "@/components/common/DecisionChain";
 import { PageHeader } from "@/components/common/PageHeader";
 import { EmptyBlock, ErrorBlock, LoadingBlock } from "@/components/common/States";
+import { ChainView } from "@/components/decisions/ChainView";
+import { EnginePanel } from "@/components/decisions/EnginePanel";
 import { DecisionStatusBadge, PriorityBadge } from "@/components/common/StatusBadge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -22,6 +24,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAuth } from "@/hooks/useAuth";
+import { config } from "@/lib/config";
 import type { Priority, RecommendationStatus, ReorderRecommendation } from "@/types/domain";
 import { describeError } from "@/api/client";
 import { formatCurrency, formatNumber } from "@/utils/formatting";
@@ -55,6 +58,7 @@ function RecommendationsPage() {
   const [status, setStatus] = useState<RecommendationStatus | "all">("all");
   const [active, setActive] = useState<ReorderRecommendation | null>(null);
   const [quantity, setQuantity] = useState("");
+  const [openChain, setOpenChain] = useState<string | null>(null);
 
   const rows = useMemo(
     () =>
@@ -112,6 +116,8 @@ function RecommendationsPage() {
         actions={<DecisionChain active="decision" />}
       />
 
+      {config.useMock ? null : <EnginePanel canDispense={hasPermission("inventory.edit")} onRan={invalidate} />}
+
       <Card>
         <CardContent className="flex flex-wrap items-center gap-3 pt-6">
           <Select value={priority} onValueChange={(value) => setPriority(value as Priority | "all")}>
@@ -164,8 +170,11 @@ function RecommendationsPage() {
                     <DecisionStatusBadge status={item.status} />
                   </CardTitle>
                   <CardDescription>
-                    {item.supplierName} · lead time {item.leadTimeDays} days · confidence{" "}
-                    {Math.round(item.confidence)}%
+                    {item.supplierName} · lead time {item.leadTimeDays} days ·{" "}
+                    {item.stockoutProbability !== undefined
+                      ? `stockout risk ${Math.round(item.stockoutProbability * 100)}%`
+                      : `confidence ${Math.round(item.confidence)}%`}
+                    {item.decidedBy ? ` · decided by ${item.decidedBy}` : ""}
                   </CardDescription>
                 </div>
                 <div className="text-right">
@@ -195,6 +204,21 @@ function RecommendationsPage() {
                   <p className="text-xs font-semibold tracking-wide text-primary uppercase">Why this decision</p>
                   <p className="mt-1.5 text-sm text-foreground">{item.rationale}</p>
                 </div>
+
+                {item.chain?.length ? (
+                  <div className="space-y-3">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="px-0 text-primary"
+                      onClick={() => setOpenChain(openChain === item.id ? null : item.id)}
+                      aria-expanded={openChain === item.id}
+                    >
+                      {openChain === item.id ? "Hide" : "Show"} how the four models reached this decision
+                    </Button>
+                    {openChain === item.id ? <ChainView chain={item.chain} /> : null}
+                  </div>
+                ) : null}
 
                 {item.status === "pending" ? (
                   <div className="flex flex-wrap gap-2">

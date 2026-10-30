@@ -104,6 +104,57 @@ export interface ReorderRecommendation {
   daysUntilReorderPoint: number;
   status: RecommendationStatus;
   rationale: string;
+  /** Present when the recommendation came from the decision engine. */
+  stockoutProbability?: number;
+  usableStock?: number | null;
+  onOrder?: number;
+  expiringUnits?: number;
+  chain?: DecisionStep[];
+  asOf?: string;
+  decidedBy?: string | null;
+  purchaseOrderId?: string | null;
+}
+
+/** One step of the decision engine's reasoning (supplier, forecast, policy, expiry, risk, decision). */
+export interface DecisionStep {
+  step: number;
+  model: string;
+  summary: string;
+  details: Record<string, unknown>;
+}
+
+export type DecisionAction = "order" | "expedite" | "none";
+
+export interface DecisionResult {
+  medicineId: number;
+  modelId: number;
+  medicineName: string;
+  strength: string;
+  reorder: boolean;
+  action: DecisionAction;
+  priority: Priority;
+  quantity: number;
+  estimatedCost: number;
+  supplierName: string;
+  leadTimeDays: number;
+  currentStock: number;
+  usableStock: number;
+  onOrder: number;
+  reorderPoint: number;
+  predictedDemand: number;
+  stockoutProbability: number;
+  expiringUnits: number;
+  rationale: string;
+}
+
+export interface DecisionRun {
+  asOf: string;
+  checked: number;
+  reorder: number;
+  created: number;
+  durationMs: number;
+  assumptions: Record<string, number>;
+  results: DecisionResult[];
 }
 
 export interface Supplier {
