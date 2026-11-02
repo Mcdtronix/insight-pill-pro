@@ -57,7 +57,11 @@ def _data(name):
 
 @lru_cache(maxsize=8)
 def _meta(folder, name):
-    return json.loads((Path(settings.MODEL_ROOT) / folder / name).read_text(encoding="utf-8"))
+    path = Path(settings.MODEL_ROOT) / folder / name
+    if not path.exists():
+        # Name the file only; never reveal server paths to the client.
+        raise FileNotFoundError(f"Model artifact is missing: {name}")
+    return json.loads(path.read_text(encoding="utf-8"))
 
 
 def _number(data, field, errors, lo=None, hi=None, integer=False, default=None):

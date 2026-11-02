@@ -32,6 +32,14 @@ export function describeError(error: unknown): { title: string; detail: string }
         return { title: "Access denied", detail: "Your role does not permit this action." };
       case 404:
         return { title: "Not found", detail: "The requested record no longer exists." };
+      case 409:
+        return { title: "Action not possible", detail: error.message || "This conflicts with the current records." };
+      case 422:
+        return { title: "Not enough data", detail: error.message || "There is not enough history to answer this yet." };
+      case 429:
+        return { title: "Too many attempts", detail: "Please wait a minute before trying again." };
+      case 503:
+        return { title: "Model unavailable", detail: error.message || "A decision model could not be loaded." };
       default:
         return { title: "Something went wrong", detail: "The server could not complete the request." };
     }

@@ -102,3 +102,31 @@ class LabAccessAndValidationTests(TestCase):
         body = response.json()
         self.assertTrue(body["atRisk"])
         self.assertEqual(body["unusedUnits"], 1200)
+
+
+class MissingModelFilesTests(TestCase):
+    """Found during Chapter 5 testing: missing model files must fail safely, without leaking server paths."""
+
+    def setUp(self):
+        import tempfile
+        from core.services import ml
+        self.tmp = tempfile.mkdtemp()
+        lab._meta.cache_clear(); ml._load.cache_clear()
+        self.client = APIClient()
+        user = User.objects.create_user(username="p@t.test", email="p@t.test", password="x", role="pharmacist")
+        self.client.force_authenticate(user)
+
+    def tearDown(self):
+        from core.services import ml
+        lab._meta.cache_clear(); ml._load.cache_clear()
+
+    def test_missing_models_return_503_without_paths(self):
+        with self.settings(MODEL_ROOT=self.tmp):
+            for method, url, body in [("get", "/api/lab/models/", None),
+                                      ("post", "/api/lab/supplier/predict/", {"onTimeRate": 0.2, "fulfillmentRate": 0.8,
+                                                                              "priceVariancePct": -2, "defectRate": 0.02,
+                                                                              "orders": 200})]:
+                response = getattr(self.client, method)(url, body, format="json") if body else self.client.get(url)
+                self.assertEqual(response.status_code, 503, url)
+                self.assertNotIn(self.tmp, response.json()["detail"])
+                self.assertNotIn("\\", response.json()["detail"])

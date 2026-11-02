@@ -62,7 +62,10 @@ class LabModelsView(APIView):
     required_permission = "forecast.view"
 
     def get(self, request):
-        return Response(lab.model_cards())
+        try:
+            return Response(lab.model_cards())
+        except FileNotFoundError as e:
+            return Response({"code": "model_unavailable", "detail": str(e)}, status=503)
 
 
 class LabActionView(APIView):

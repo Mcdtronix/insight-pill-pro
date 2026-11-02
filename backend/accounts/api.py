@@ -3,6 +3,7 @@ from django.db.models import Q
 from rest_framework import serializers, status
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.throttling import ScopedRateThrottle
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.exceptions import TokenError
@@ -14,6 +15,8 @@ class LoginSerializer(serializers.Serializer):
 
 class LoginView(APIView):
     permission_classes = [AllowAny]
+    # The scope alone does nothing: ScopedRateThrottle must be enabled for the rate to apply.
+    throttle_classes = [ScopedRateThrottle]
     throttle_scope = "login"
     def post(self, request):
         data = LoginSerializer(data=request.data)
