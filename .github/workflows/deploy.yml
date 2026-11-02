@@ -105,7 +105,8 @@ jobs:
       # Code rules gate the build. Formatting (Prettier) is reported only, so a
       # Lovable edit with different line wrapping never blocks a deploy.
       - name: Lint (code rules)
-        run: npx eslint src --rule 'prettier/prettier: off' --max-warnings 20
+        run: >-
+          npx eslint src --rule 'prettier/prettier: off' --max-warnings 20
 
       - name: Formatting report (non-blocking)
         continue-on-error: true
@@ -124,7 +125,7 @@ jobs:
         run: |
           PORT=3999 HOST=127.0.0.1 NODE_ENV=production node .output/server/index.mjs &
           pid=$!
-          for i in $(seq 1 20); do curl -fsS -o /dev/null http://127.0.0.1:3999/login && break; sleep 1; done
+          for _ in $(seq 1 20); do curl -fsS -o /dev/null http://127.0.0.1:3999/login && break; sleep 1; done
           for page in /login /dashboard /model-lab; do
             curl -fsS http://127.0.0.1:3999$page | grep -qi '<html' || { echo "::error::$page did not render"; exit 1; }
             echo "✔ $page"
