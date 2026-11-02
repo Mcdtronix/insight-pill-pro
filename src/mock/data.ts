@@ -321,7 +321,7 @@ export const expiryBatches: ExpiryBatch[] = inventory
   .map((item, idx) => {
     const daysRemaining = Math.max(
       3,
-      Math.round((new Date(item.earliestExpiry).getTime() - Date.now()) / 86400000),
+      Math.round((new Date(item.earliestExpiry ?? Date.now()).getTime() - Date.now()) / 86400000),
     );
     const quantity = Math.round(item.currentStock * 0.6);
     // Only part of total demand is served from this batch on slow-moving lines.
@@ -338,7 +338,7 @@ export const expiryBatches: ExpiryBatch[] = inventory
       strength: item.strength,
       batchNumber: `${item.medicineName.slice(0, 3).toUpperCase()}-2026-${String(idx + 1).padStart(2, "0")}`,
       quantity,
-      expiryDate: item.earliestExpiry,
+      expiryDate: item.earliestExpiry ?? "",
       daysRemaining,
       dailyConsumption: batchDailyUse,
       projectedUnusedUnits: projectedUnused,

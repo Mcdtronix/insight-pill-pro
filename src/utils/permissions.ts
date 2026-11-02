@@ -33,7 +33,17 @@ const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     "expiry.view",
     "reports.view",
   ],
-  pharmacist: ["inventory.view", "forecast.view", "recommendations.view", "expiry.view", "reports.view"],
+  // Pharmacists dispense, review supplier performance and approve reorders (dissertation, Section 1.7.1).
+  pharmacist: [
+    "inventory.view",
+    "inventory.edit",
+    "forecast.view",
+    "recommendations.view",
+    "recommendations.approve",
+    "suppliers.view",
+    "expiry.view",
+    "reports.view",
+  ],
   staff: ["inventory.view", "expiry.view"],
 };
 

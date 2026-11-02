@@ -15,6 +15,7 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as AppDashboardRouteImport } from './routes/_app.dashboard'
 import { Route as AppExpiryRouteImport } from './routes/_app.expiry'
 import { Route as AppForecastingRouteImport } from './routes/_app.forecasting'
+import { Route as AppModelLabRouteImport } from './routes/_app.model-lab'
 import { Route as AppRecommendationsRouteImport } from './routes/_app.recommendations'
 import { Route as AppReportsRouteImport } from './routes/_app.reports'
 import { Route as AppSettingsRouteImport } from './routes/_app.settings'
@@ -49,6 +50,11 @@ const AppExpiryRoute = AppExpiryRouteImport.update({
 const AppForecastingRoute = AppForecastingRouteImport.update({
   id: '/forecasting',
   path: '/forecasting',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppModelLabRoute = AppModelLabRouteImport.update({
+  id: '/model-lab',
+  path: '/model-lab',
   getParentRoute: () => AppRoute,
 } as any)
 const AppRecommendationsRoute = AppRecommendationsRouteImport.update({
@@ -88,6 +94,7 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof AppDashboardRoute
   '/expiry': typeof AppExpiryRoute
   '/forecasting': typeof AppForecastingRoute
+  '/model-lab': typeof AppModelLabRoute
   '/recommendations': typeof AppRecommendationsRoute
   '/reports': typeof AppReportsRoute
   '/settings': typeof AppSettingsRoute
@@ -101,6 +108,7 @@ export interface FileRoutesByTo {
   '/dashboard': typeof AppDashboardRoute
   '/expiry': typeof AppExpiryRoute
   '/forecasting': typeof AppForecastingRoute
+  '/model-lab': typeof AppModelLabRoute
   '/recommendations': typeof AppRecommendationsRoute
   '/reports': typeof AppReportsRoute
   '/settings': typeof AppSettingsRoute
@@ -116,6 +124,7 @@ export interface FileRoutesById {
   '/_app/dashboard': typeof AppDashboardRoute
   '/_app/expiry': typeof AppExpiryRoute
   '/_app/forecasting': typeof AppForecastingRoute
+  '/_app/model-lab': typeof AppModelLabRoute
   '/_app/recommendations': typeof AppRecommendationsRoute
   '/_app/reports': typeof AppReportsRoute
   '/_app/settings': typeof AppSettingsRoute
@@ -131,6 +140,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/expiry'
     | '/forecasting'
+    | '/model-lab'
     | '/recommendations'
     | '/reports'
     | '/settings'
@@ -144,6 +154,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/expiry'
     | '/forecasting'
+    | '/model-lab'
     | '/recommendations'
     | '/reports'
     | '/settings'
@@ -158,6 +169,7 @@ export interface FileRouteTypes {
     | '/_app/dashboard'
     | '/_app/expiry'
     | '/_app/forecasting'
+    | '/_app/model-lab'
     | '/_app/recommendations'
     | '/_app/reports'
     | '/_app/settings'
@@ -216,6 +228,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppForecastingRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/model-lab': {
+      id: '/_app/model-lab'
+      path: '/model-lab'
+      fullPath: '/model-lab'
+      preLoaderRoute: typeof AppModelLabRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/recommendations': {
       id: '/_app/recommendations'
       path: '/recommendations'
@@ -265,6 +284,7 @@ interface AppRouteChildren {
   AppDashboardRoute: typeof AppDashboardRoute
   AppExpiryRoute: typeof AppExpiryRoute
   AppForecastingRoute: typeof AppForecastingRoute
+  AppModelLabRoute: typeof AppModelLabRoute
   AppRecommendationsRoute: typeof AppRecommendationsRoute
   AppReportsRoute: typeof AppReportsRoute
   AppSettingsRoute: typeof AppSettingsRoute
@@ -277,6 +297,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppDashboardRoute: AppDashboardRoute,
   AppExpiryRoute: AppExpiryRoute,
   AppForecastingRoute: AppForecastingRoute,
+  AppModelLabRoute: AppModelLabRoute,
   AppRecommendationsRoute: AppRecommendationsRoute,
   AppReportsRoute: AppReportsRoute,
   AppSettingsRoute: AppSettingsRoute,

@@ -23,8 +23,20 @@ export interface ReportRequest {
 export interface ReportResult {
   generatedAt: string;
   rows: number;
-  payload: Record<string, unknown>;
+  /** Real file produced by the backend (CSV or PDF), base64-encoded. */
+  filename?: string;
+  mimeType?: string;
+  contentBase64?: string;
+  columns?: string[];
+  preview?: Record<string, unknown>[];
+  payload?: Record<string, unknown>;
 }
+
+/** The backend's notion of "today" (the demo date when demo mode is on). */
+export const systemApi = {
+  health: () =>
+    request<{ status: string; today: string; demo: boolean }>("/health/", { auth: false }),
+};
 
 export const reportApi = {
   generate: (payload: ReportRequest): Promise<ReportResult> =>

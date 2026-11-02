@@ -147,7 +147,9 @@ function InventoryPage() {
                       <TableCell className="text-right tabular-nums text-muted-foreground">
                         {formatNumber(item.dailyConsumption)}
                       </TableCell>
-                      <TableCell className="text-muted-foreground">{formatDate(item.earliestExpiry)}</TableCell>
+                      <TableCell className="text-muted-foreground">
+                        {item.earliestExpiry ? formatDate(item.earliestExpiry) : "—"}
+                      </TableCell>
                       <TableCell className="text-muted-foreground">{item.supplierName}</TableCell>
                       <TableCell className="text-right tabular-nums">
                         {formatCurrency(item.currentStock * item.unitCost, 0)}

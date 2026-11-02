@@ -109,7 +109,9 @@ function MedicineDetailPage() {
             <CardDescription>First batch to expire under FEFO.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-2">
-            <p className="text-2xl font-semibold">{formatDate(record.earliestExpiry)}</p>
+            <p className="text-2xl font-semibold">
+              {record.earliestExpiry ? formatDate(record.earliestExpiry) : "No stock on hand"}
+            </p>
             <Button asChild variant="outline" size="sm">
               <Link to="/expiry">Review expiry risk</Link>
             </Button>

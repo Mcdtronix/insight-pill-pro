@@ -81,6 +81,8 @@ class DailyDemand(models.Model):
     date = models.DateField()
     quantity = models.PositiveIntegerField()
     stockout = models.BooleanField(default=False)
+    # Closing balance that day (from the dataset); used for the stock-value trend.
+    closing_stock = models.PositiveIntegerField(null=True, blank=True)
     complete = models.BooleanField(default=True)
     holiday = models.BooleanField(default=False)
     season = models.CharField(max_length=50)

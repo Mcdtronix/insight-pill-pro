@@ -138,7 +138,7 @@ function ForecastingPage() {
             <CardHeader>
               <CardTitle>{forecast.data.medicineName}</CardTitle>
               <CardDescription>
-                Historical consumption against the predicted demand curve and its confidence interval.
+                Recent consumption against the forecast. The band is an 80% prediction interval taken from the model's errors on held-out data for this category.
               </CardDescription>
             </CardHeader>
             <CardContent className="h-[360px]">
@@ -159,7 +159,7 @@ function ForecastingPage() {
                   <Area
                     type="monotone"
                     dataKey="band"
-                    name="Confidence interval"
+                    name="80% prediction interval"
                     stroke="none"
                     fill="var(--chart-2)"
                     fillOpacity={0.18}

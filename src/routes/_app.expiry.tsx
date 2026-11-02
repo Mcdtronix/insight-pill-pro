@@ -69,7 +69,10 @@ function ExpiryPage() {
       />
 
       <div className="grid gap-4 sm:grid-cols-3">
-        <Summary label="Batches at risk" value={formatNumber(rows.length)} />
+        <Summary
+          label={`Batches at risk (of ${formatNumber(rows.length)} expiring in window)`}
+          value={formatNumber(rows.filter((batch) => batch.projectedUnusedUnits > 0).length)}
+        />
         <Summary label="Units likely unused" value={formatNumber(unitsAtRisk)} />
         <Summary label="Value exposed" value={formatCurrency(exposure, 0)} tone />
       </div>

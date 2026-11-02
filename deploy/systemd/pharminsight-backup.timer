@@ -1,0 +1,11 @@
+[Unit]
+Description=Run the PharmInsight backup every night
+
+[Timer]
+# 02:45, after the portfolio backup at 02:30, so the two never compete for disk.
+OnCalendar=*-*-* 02:45:00
+RandomizedDelaySec=10min
+Persistent=true
+
+[Install]
+WantedBy=timers.target
