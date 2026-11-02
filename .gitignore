@@ -88,3 +88,6 @@ nosetests.xml
 coverage.xml
 *.cover
 .hypothesis/
+# Data snapshots from `manage.py export_data` (contain password hashes)
+pharminsight-data-*.json.gz
+*.snapshot.json.gz

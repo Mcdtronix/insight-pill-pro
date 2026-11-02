@@ -91,15 +91,37 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 MODEL_ROOT = Path(os.getenv("MODEL_ROOT", str(PROJECT_DIR / "ml")))
 DATA_ROOT = Path(os.getenv("DATA_ROOT", str(PROJECT_DIR / "ml" / "data")))
+def _env_bool(name: str, default: bool) -> bool:
+    return os.getenv(name, str(default)).strip().lower() in ("1", "true", "yes")
+
+
 DSS_DEMO_DATE = os.getenv("DSS_DEMO_DATE", "")
-if DSS_DEMO_DATE and not DEBUG:
-    raise ImproperlyConfigured("Historical demonstration mode requires DEBUG=true")
+# A fixed "today" is a demonstration feature. Outside DEBUG it must be switched on
+# explicitly, so a production server can never run on a fake date by accident.
+if DSS_DEMO_DATE and not DEBUG and not _env_bool("DSS_ALLOW_DEMO_DATE", False):
+    raise ImproperlyConfigured("DSS_DEMO_DATE outside DEBUG requires DSS_ALLOW_DEMO_DATE=true")
 DATA_UPLOAD_MAX_MEMORY_SIZE = 1024 * 1024
 SECURE_CONTENT_TYPE_NOSNIFF = True
 SESSION_COOKIE_HTTPONLY = True
 SESSION_COOKIE_SECURE = not DEBUG
 CSRF_COOKIE_SECURE = not DEBUG
-SECURE_SSL_REDIRECT = not DEBUG
-SECURE_HSTS_SECONDS = 31536000 if not DEBUG else 0
+
+# Behind Nginx, TLS ends at the proxy. Nginx redirects HTTP to HTTPS and sends HSTS,
+# so production sets SECURE_SSL_REDIRECT=false and trusts X-Forwarded-Proto instead.
+SECURE_SSL_REDIRECT = _env_bool("SECURE_SSL_REDIRECT", not DEBUG)
+if _env_bool("BEHIND_PROXY", False):
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+    # Rate limits must see the real client, not Nginx on 127.0.0.1.
+    REST_FRAMEWORK["NUM_PROXIES"] = 1
+SECURE_HSTS_SECONDS = int(os.getenv("SECURE_HSTS_SECONDS", "0" if DEBUG else "31536000"))
 SECURE_HSTS_INCLUDE_SUBDOMAINS = not DEBUG
-SECURE_HSTS_PRELOAD = not DEBUG
+SECURE_HSTS_PRELOAD = False
+
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {"plain": {"format": "%(asctime)s %(levelname)s %(name)s: %(message)s"}},
+    "handlers": {"console": {"class": "logging.StreamHandler", "formatter": "plain"}},
+    "root": {"handlers": ["console"], "level": os.getenv("LOG_LEVEL", "INFO")},
+    "loggers": {"django.request": {"handlers": ["console"], "level": "WARNING", "propagate": False}},
+}

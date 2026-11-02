@@ -1,0 +1,35 @@
+[Unit]
+Description=PharmInsight web (TanStack Start SSR on Node) for pharminsight.mcdtronix.co.zw
+After=network-online.target pharminsight-api.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=deploy
+Group=deploy
+
+# `current` is re-resolved on every (re)start, so a restart picks up the new release.
+WorkingDirectory=/srv/apps/pharminsight/current/web
+Environment=NODE_ENV=production
+Environment=HOST=127.0.0.1
+Environment=PORT=3003
+ExecStart=/usr/bin/node server/index.mjs
+Restart=on-failure
+RestartSec=5
+TimeoutStopSec=20
+UMask=0027
+
+# Sandboxing — the web server only reads its release folder.
+NoNewPrivileges=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectSystem=strict
+ProtectHome=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+LockPersonality=true
+
+[Install]
+WantedBy=multi-user.target

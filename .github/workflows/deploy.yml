@@ -1,0 +1,279 @@
+# -----------------------------------------------------------------------------
+# PharmInsight CI/CD -> https://pharminsight.mcdtronix.co.zw (Contabo VPS)
+#
+#   pull request / push to any branch : test + build only
+#   push to main (or manual run on main): test + build -> package -> deploy -> verify
+#
+# The server side (backup, migrate, pre-flight test, atomic switch, automatic
+# rollback) lives in deploy/scripts/deploy.sh. Runbook: deploy/README.md
+#
+# Required repository secrets:
+#   VPS_HOST, VPS_USER, VPS_SSH_KEY, VPS_KNOWN_HOSTS   (optional: VPS_PORT)
+# -----------------------------------------------------------------------------
+name: CI/CD · PharmInsight
+
+on:
+  push:
+    branches: ["**"]
+    paths-ignore: ["docs/**", "**/*.md"]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+  PYTHON_VERSION: "3.12"     # same as Ubuntu 24.04 on the VPS
+  NODE_VERSION: "22"         # same major as the VPS
+  APP_ROOT: /srv/apps/pharminsight
+  SITE_URL: https://pharminsight.mcdtronix.co.zw
+
+jobs:
+  # ------------------------------------------------------------------ CI ----
+  backend:
+    name: Backend · tests on PostgreSQL
+    runs-on: ubuntu-24.04
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: pharminsight_ci
+          POSTGRES_USER: pharminsight
+          POSTGRES_PASSWORD: pharminsight
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U pharminsight"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      # Same settings shape as production (shared/.env on the VPS).
+      POSTGRES_HOST: 127.0.0.1
+      POSTGRES_PORT: "5432"
+      POSTGRES_DB: pharminsight_ci
+      POSTGRES_USER: pharminsight
+      POSTGRES_PASSWORD: pharminsight
+      DJANGO_DEBUG: "false"
+      DJANGO_SECRET_KEY: ci-only-${{ github.run_id }}-not-a-real-secret-0123456789abcdefghijklmnopqrstuvwxyz
+      DJANGO_ALLOWED_HOSTS: pharminsight.mcdtronix.co.zw,localhost,127.0.0.1,testserver
+      SECURE_SSL_REDIRECT: "false"
+      BEHIND_PROXY: "true"
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4.2.2
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+          cache-dependency-path: backend/requirements.txt
+
+      - name: Install dependencies
+        run: pip install --disable-pip-version-check -r requirements.txt
+
+      - name: Migrations are committed
+        run: python manage.py makemigrations --check --dry-run
+
+      - name: Django deploy checks
+        run: python manage.py check --deploy --fail-level ERROR
+
+      - name: Migrations apply cleanly on PostgreSQL
+        run: python manage.py migrate --noinput
+
+      - name: Tests (engine, models, API, auth, data transfer)
+        run: python manage.py test --noinput -v 2
+
+  frontend:
+    name: Frontend · lint, types & SSR build
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4.2.2
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies (lockfile must be up to date)
+        run: bun install --frozen-lockfile
+
+      # Code rules gate the build. Formatting (Prettier) is reported only, so a
+      # Lovable edit with different line wrapping never blocks a deploy.
+      - name: Lint (code rules)
+        run: npx eslint src --rule 'prettier/prettier: off' --max-warnings 20
+
+      - name: Formatting report (non-blocking)
+        continue-on-error: true
+        run: npx prettier --check "src/**/*.{ts,tsx}" | tail -n 5
+
+      - name: Type check
+        run: npx tsc --noEmit
+
+      - name: Build for Node (SSR)
+        env:
+          NITRO_PRESET: node-server                       # VPS runs Node, not Cloudflare
+          VITE_API_URL: ${{ env.SITE_URL }}/api
+        run: npx vite build
+
+      - name: Boot the SSR server and render key pages
+        run: |
+          PORT=3999 HOST=127.0.0.1 NODE_ENV=production node .output/server/index.mjs &
+          pid=$!
+          for i in $(seq 1 20); do curl -fsS -o /dev/null http://127.0.0.1:3999/login && break; sleep 1; done
+          for page in /login /dashboard /model-lab; do
+            curl -fsS http://127.0.0.1:3999$page | grep -qi '<html' || { echo "::error::$page did not render"; exit 1; }
+            echo "✔ $page"
+          done
+          asset="$(curl -fsS http://127.0.0.1:3999/login | grep -o '/assets/[^"]*\.js' | head -n1)"
+          curl -fsS -o /dev/null "http://127.0.0.1:3999$asset" && echo "✔ $asset"
+          grep -rq "${SITE_URL}/api" .output/public/assets || { echo "::error::API URL not baked into bundle"; exit 1; }
+          kill $pid
+
+      - name: Stage build (hidden .output is not uploaded by default)
+        run: mv .output web
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: web-build
+          path: web/
+          retention-days: 7
+
+  scripts:
+    name: Deploy scripts · shellcheck
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4.2.2
+      - name: shellcheck
+        run: shellcheck -x -S warning deploy/scripts/*.sh deploy/server/*.sh
+
+  # ------------------------------------------------------------- package ----
+  package:
+    name: Package release
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    needs: [backend, frontend, scripts]
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4.2.2
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: web-build
+          path: release/web
+
+      - name: Assemble release archive
+        run: |
+          mkdir -p release/backend
+          git archive HEAD:backend | tar -x -C release/backend
+          # Models and datasets the API loads (the Colab copies are not needed at runtime).
+          git archive HEAD ml/Demand ml/Reorder ml/supplier ml/data | tar -x -C release
+          # Never ship local artefacts or secrets.
+          rm -rf release/backend/db.sqlite3 release/backend/.env release/backend/.secret.local \
+                 release/backend/staticfiles
+          find release -name '__pycache__' -type d -prune -exec rm -rf {} +
+          test -f release/web/server/index.mjs && test -d release/web/public/assets
+          echo "${GITHUB_SHA}" > release/REVISION
+          tar -czf release.tar.gz -C release .
+          {
+            echo "### Release ${GITHUB_SHA::7}"
+            echo "Archive size: $(du -h release.tar.gz | cut -f1)"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release
+          path: release.tar.gz
+          retention-days: 14
+
+  # -------------------------------------------------------------- deploy ----
+  deploy:
+    name: Deploy to production
+    needs: package
+    runs-on: ubuntu-24.04
+    environment:
+      name: production
+      url: ${{ env.SITE_URL }}
+    concurrency:
+      group: production-pharminsight
+      cancel-in-progress: false      # never interrupt a running deploy
+    timeout-minutes: 30              # the first run builds the scikit-learn virtualenv
+    steps:
+      - uses: actions/checkout@v4.2.2
+        with:
+          sparse-checkout: deploy
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: release
+
+      - name: Configure SSH
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_USER: ${{ secrets.VPS_USER }}
+          VPS_PORT: ${{ secrets.VPS_PORT }}
+          VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+          VPS_KNOWN_HOSTS: ${{ secrets.VPS_KNOWN_HOSTS }}
+        run: |
+          for v in VPS_HOST VPS_USER VPS_SSH_KEY VPS_KNOWN_HOSTS; do
+            [ -n "${!v}" ] || { echo "::error::Missing secret $v"; exit 1; }
+          done
+          install -d -m 700 ~/.ssh
+          printf '%s\n' "$VPS_SSH_KEY"     > ~/.ssh/deploy_key && chmod 600 ~/.ssh/deploy_key
+          printf '%s\n' "$VPS_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          cat > ~/.ssh/config <<EOF
+          Host vps
+            HostName ${VPS_HOST}
+            User ${VPS_USER}
+            Port ${VPS_PORT:-22}
+            IdentityFile ~/.ssh/deploy_key
+            IdentitiesOnly yes
+            StrictHostKeyChecking yes
+            ServerAliveInterval 30
+            ConnectTimeout 15
+          EOF
+          ssh vps 'echo "Connected to $(hostname) as $(whoami)"'
+
+      - name: Upload deploy scripts and release
+        run: |
+          scp -q deploy/scripts/*.sh deploy/app.conf vps:"${APP_ROOT}/bin/"
+          ssh vps "chmod 750 ${APP_ROOT}/bin/*.sh"
+          scp -q release.tar.gz vps:"${APP_ROOT}/incoming/release-${GITHUB_SHA}.tar.gz"
+
+      - name: Deploy (backup → migrate → pre-flight → switch → verify)
+        run: ssh vps "${APP_ROOT}/bin/deploy.sh ${APP_ROOT}/incoming/release-${GITHUB_SHA}.tar.gz"
+
+      - name: Verify from the public internet
+        id: verify
+        run: |
+          for i in $(seq 1 10); do
+            if curl -fsS --max-time 10 "${SITE_URL}/api/health/" | grep -Eq '"status": ?"ok"' \
+               && curl -fsS --max-time 15 "${SITE_URL}/login" | grep -qi '<html' \
+               && [ "$(curl -s -o /dev/null -w '%{http_code}' "${SITE_URL}/api/dashboard/kpis/")" = "401" ]; then
+              echo "✅ ${SITE_URL} is healthy"
+              exit 0
+            fi
+            echo "Attempt $i failed, retrying..."; sleep 6
+          done
+          echo "::error::${SITE_URL} failed external verification"
+          exit 1
+
+      - name: Roll back (external verification failed)
+        if: failure() && steps.verify.outcome == 'failure'
+        run: ssh vps "${APP_ROOT}/bin/rollback.sh"
+
+      - name: Summary
+        if: always()
+        run: |
+          {
+            echo "### Deployment ${GITHUB_SHA::7} — ${{ job.status }}"
+            echo "- Site: ${SITE_URL}"
+            echo "- Triggered by: ${GITHUB_ACTOR} (${GITHUB_EVENT_NAME})"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Remove SSH key
+        if: always()
+        run: rm -f ~/.ssh/deploy_key

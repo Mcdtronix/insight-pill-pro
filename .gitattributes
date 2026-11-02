@@ -1,0 +1,6 @@
+# Server-side files must keep LF endings, even when edited on Windows.
+*.sh        text eol=lf
+deploy/**   text eol=lf
+*.yml       text eol=lf
+*.service   text eol=lf
+*.timer     text eol=lf

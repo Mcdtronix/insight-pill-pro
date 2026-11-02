@@ -1,0 +1,3 @@
+# /etc/sudoers.d/deploy-pharminsight — the deploy user may restart the two PharmInsight
+# services and nothing else. Validated with `visudo -cf` before installation.
+deploy ALL=(root) NOPASSWD: /usr/bin/systemctl restart pharminsight-api, /usr/bin/systemctl restart pharminsight-web, /usr/bin/systemctl status pharminsight-api, /usr/bin/systemctl status pharminsight-web, /usr/bin/systemctl is-active pharminsight-api, /usr/bin/systemctl is-active pharminsight-web

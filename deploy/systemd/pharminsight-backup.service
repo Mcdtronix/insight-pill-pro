@@ -1,0 +1,11 @@
+[Unit]
+Description=Nightly backup of the PharmInsight database
+After=postgresql.service
+
+[Service]
+Type=oneshot
+User=deploy
+Group=deploy
+ExecStart=/srv/apps/pharminsight/bin/backup.sh
+Nice=10
+IOSchedulingClass=idle

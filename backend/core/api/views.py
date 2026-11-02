@@ -1,4 +1,7 @@
 from datetime import timedelta
+from pathlib import Path
+from django.conf import settings
+from django.db import connection
 from django.db import transaction
 from django.db.models import Sum, F
 from django.http import HttpResponse
@@ -22,9 +25,36 @@ def medicine_dict(m, plan=None):
         out.update(unitCost=plan["unitCost"], supplierId=str(plan["supplierId"]), supplierName=plan["supplierName"])
     return out
 
+# Files the decision engine cannot run without. Checked by /api/health/ so a release
+# with missing models never goes live.
+REQUIRED_MODEL_FILES = (
+    ("Demand", "forecast_model_v1.pkl"), ("Demand", "category_encoder_v1.pkl"),
+    ("Demand", "season_encoder_v1.pkl"), ("Reorder", "reorder_risk_model_v1.pkl"),
+    ("supplier", "supplier_kmeans_v1.pkl"), ("supplier", "supplier_scaler_v1.pkl"),
+)
+
+
 class HealthView(APIView):
+    """Liveness, database and model check used by the deploy pipeline and monitoring."""
     permission_classes=[AllowAny]
-    def get(self, request): return Response({"status":"ok","service":"pharmacy-dss","time":timezone.now(),"today":today().isoformat(),"demo":is_demo()})
+    authentication_classes=[]
+
+    def get(self, request):
+        checks={"database":"ok","models":"ok"}
+        try:
+            with connection.cursor() as cursor:
+                cursor.execute("SELECT 1"); cursor.fetchone()
+        except Exception:
+            checks["database"]="unavailable"
+        root=Path(settings.MODEL_ROOT)
+        if not all((root/folder/name).is_file() for folder, name in REQUIRED_MODEL_FILES):
+            checks["models"]="missing"
+        healthy=all(v=="ok" for v in checks.values())
+        body={"status":"ok" if healthy else "error","service":"pharmacy-dss",**checks,
+              "time":timezone.now(),"today":today().isoformat(),"demo":is_demo()}
+        response=Response(body, status=200 if healthy else 503)
+        response["Cache-Control"]="no-store"
+        return response
 
 class MedicineListView(APIView):
     required_permission="inventory.view"
