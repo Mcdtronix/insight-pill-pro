@@ -13,10 +13,12 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as AppDashboardRouteImport } from './routes/_app.dashboard'
+import { Route as AppDispensingRouteImport } from './routes/_app.dispensing'
 import { Route as AppExpiryRouteImport } from './routes/_app.expiry'
 import { Route as AppForecastingRouteImport } from './routes/_app.forecasting'
 import { Route as AppModelLabRouteImport } from './routes/_app.model-lab'
 import { Route as AppRecommendationsRouteImport } from './routes/_app.recommendations'
+import { Route as AppRecordsRouteImport } from './routes/_app.records'
 import { Route as AppReportsRouteImport } from './routes/_app.reports'
 import { Route as AppSettingsRouteImport } from './routes/_app.settings'
 import { Route as AppSuppliersRouteImport } from './routes/_app.suppliers'
@@ -42,6 +44,11 @@ const AppDashboardRoute = AppDashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => AppRoute,
 } as any)
+const AppDispensingRoute = AppDispensingRouteImport.update({
+  id: '/dispensing',
+  path: '/dispensing',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppExpiryRoute = AppExpiryRouteImport.update({
   id: '/expiry',
   path: '/expiry',
@@ -60,6 +67,11 @@ const AppModelLabRoute = AppModelLabRouteImport.update({
 const AppRecommendationsRoute = AppRecommendationsRouteImport.update({
   id: '/recommendations',
   path: '/recommendations',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppRecordsRoute = AppRecordsRouteImport.update({
+  id: '/records',
+  path: '/records',
   getParentRoute: () => AppRoute,
 } as any)
 const AppReportsRoute = AppReportsRouteImport.update({
@@ -92,10 +104,12 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/dashboard': typeof AppDashboardRoute
+  '/dispensing': typeof AppDispensingRoute
   '/expiry': typeof AppExpiryRoute
   '/forecasting': typeof AppForecastingRoute
   '/model-lab': typeof AppModelLabRoute
   '/recommendations': typeof AppRecommendationsRoute
+  '/records': typeof AppRecordsRoute
   '/reports': typeof AppReportsRoute
   '/settings': typeof AppSettingsRoute
   '/suppliers': typeof AppSuppliersRoute
@@ -106,10 +120,12 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/dashboard': typeof AppDashboardRoute
+  '/dispensing': typeof AppDispensingRoute
   '/expiry': typeof AppExpiryRoute
   '/forecasting': typeof AppForecastingRoute
   '/model-lab': typeof AppModelLabRoute
   '/recommendations': typeof AppRecommendationsRoute
+  '/records': typeof AppRecordsRoute
   '/reports': typeof AppReportsRoute
   '/settings': typeof AppSettingsRoute
   '/suppliers': typeof AppSuppliersRoute
@@ -122,10 +138,12 @@ export interface FileRoutesById {
   '/_app': typeof AppRouteWithChildren
   '/login': typeof LoginRoute
   '/_app/dashboard': typeof AppDashboardRoute
+  '/_app/dispensing': typeof AppDispensingRoute
   '/_app/expiry': typeof AppExpiryRoute
   '/_app/forecasting': typeof AppForecastingRoute
   '/_app/model-lab': typeof AppModelLabRoute
   '/_app/recommendations': typeof AppRecommendationsRoute
+  '/_app/records': typeof AppRecordsRoute
   '/_app/reports': typeof AppReportsRoute
   '/_app/settings': typeof AppSettingsRoute
   '/_app/suppliers': typeof AppSuppliersRoute
@@ -138,10 +156,12 @@ export interface FileRouteTypes {
     | '/'
     | '/login'
     | '/dashboard'
+    | '/dispensing'
     | '/expiry'
     | '/forecasting'
     | '/model-lab'
     | '/recommendations'
+    | '/records'
     | '/reports'
     | '/settings'
     | '/suppliers'
@@ -152,10 +172,12 @@ export interface FileRouteTypes {
     | '/'
     | '/login'
     | '/dashboard'
+    | '/dispensing'
     | '/expiry'
     | '/forecasting'
     | '/model-lab'
     | '/recommendations'
+    | '/records'
     | '/reports'
     | '/settings'
     | '/suppliers'
@@ -167,10 +189,12 @@ export interface FileRouteTypes {
     | '/_app'
     | '/login'
     | '/_app/dashboard'
+    | '/_app/dispensing'
     | '/_app/expiry'
     | '/_app/forecasting'
     | '/_app/model-lab'
     | '/_app/recommendations'
+    | '/_app/records'
     | '/_app/reports'
     | '/_app/settings'
     | '/_app/suppliers'
@@ -214,6 +238,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppDashboardRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/dispensing': {
+      id: '/_app/dispensing'
+      path: '/dispensing'
+      fullPath: '/dispensing'
+      preLoaderRoute: typeof AppDispensingRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/expiry': {
       id: '/_app/expiry'
       path: '/expiry'
@@ -240,6 +271,13 @@ declare module '@tanstack/react-router' {
       path: '/recommendations'
       fullPath: '/recommendations'
       preLoaderRoute: typeof AppRecommendationsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/records': {
+      id: '/_app/records'
+      path: '/records'
+      fullPath: '/records'
+      preLoaderRoute: typeof AppRecordsRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/reports': {
@@ -282,10 +320,12 @@ declare module '@tanstack/react-router' {
 
 interface AppRouteChildren {
   AppDashboardRoute: typeof AppDashboardRoute
+  AppDispensingRoute: typeof AppDispensingRoute
   AppExpiryRoute: typeof AppExpiryRoute
   AppForecastingRoute: typeof AppForecastingRoute
   AppModelLabRoute: typeof AppModelLabRoute
   AppRecommendationsRoute: typeof AppRecommendationsRoute
+  AppRecordsRoute: typeof AppRecordsRoute
   AppReportsRoute: typeof AppReportsRoute
   AppSettingsRoute: typeof AppSettingsRoute
   AppSuppliersRoute: typeof AppSuppliersRoute
@@ -295,10 +335,12 @@ interface AppRouteChildren {
 
 const AppRouteChildren: AppRouteChildren = {
   AppDashboardRoute: AppDashboardRoute,
+  AppDispensingRoute: AppDispensingRoute,
   AppExpiryRoute: AppExpiryRoute,
   AppForecastingRoute: AppForecastingRoute,
   AppModelLabRoute: AppModelLabRoute,
   AppRecommendationsRoute: AppRecommendationsRoute,
+  AppRecordsRoute: AppRecordsRoute,
   AppReportsRoute: AppReportsRoute,
   AppSettingsRoute: AppSettingsRoute,
   AppSuppliersRoute: AppSuppliersRoute,

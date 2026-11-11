@@ -13,7 +13,7 @@ from rest_framework.views import APIView
 from core.models import Medicine, Batch, StockMovement, Recommendation, Supplier, Notification, Report, PurchaseOrder, SupplierDelivery, AuditEvent
 from core.services.ml import demand_forecast
 from core.services.clock import today, is_demo
-from core.services import insights
+from core.services import insights, stock
 from core.api.errors import ModelUnavailable
 from .permissions import RolePermission
 
@@ -118,27 +118,40 @@ class MedicineForecastView(APIView):
         except ValueError as e:return Response({"code":"insufficient_history","detail":str(e)},status=422)
 
 class StockMovementView(APIView):
+    """Record one stock movement against one batch.
+
+    Rules (core.services.stock): nothing is dispensed from an expired or quarantined
+    batch, no stock is received into one, a batch never goes below zero, and expired
+    stock can always be disposed of.
+    """
     required_permission="inventory.edit"
     @transaction.atomic
     def post(self, request):
         d=request.data; required=["batchId","kind","quantity","reason","key"]
         missing=[x for x in required if x not in d]
         if missing:return Response({"code":"validation_error","fields":{x:["This field is required."] for x in missing}},status=400)
-        try: batch=Batch.objects.select_for_update().get(pk=d["batchId"]); qty=int(d["quantity"])
+        try: batch=Batch.objects.select_for_update(of=("self",)).select_related("medicine").get(pk=d["batchId"]); qty=int(d["quantity"])
         except (Batch.DoesNotExist,ValueError,TypeError): return Response({"code":"validation_error","detail":"Batch or quantity is invalid."},status=400)
         kind=d["kind"]
         if kind not in {"receipt","dispense","adjustment","disposal"}: return Response({"code":"validation_error","fields":{"kind":["Movement kind is invalid."]}},status=400)
         if qty==0:return Response({"code":"validation_error","fields":{"quantity":["Quantity must not be zero."]}},status=400)
         if kind in {"dispense","disposal"} and qty>0: qty=-qty
         if kind=="receipt" and qty<0: return Response({"code":"validation_error","fields":{"quantity":["Receipt quantity must be positive."]}},status=400)
-        current=sum(x.quantity for x in batch.medicine.batches.filter(quarantined=False))
-        if kind in {"dispense","disposal"} and current < abs(qty): return Response({"code":"insufficient_stock","detail":"Insufficient available stock for this movement."},status=409)
-        try: mv=StockMovement.objects.create(batch=batch,kind=kind,quantity=qty,occurred_at=timezone.now(),actor=request.user,reason=str(d["reason"])[:300],key=d["key"],fingerprint=str(d.get("fingerprint",""))[:64])
+        state=stock.batch_status(batch)
+        if kind=="dispense" and state in (stock.EXPIRED, stock.QUARANTINED):
+            return Response({"code":"expired_batch" if state==stock.EXPIRED else "quarantined_batch",
+                             "detail":f"Batch {batch.number} is {stock.STATUS_LABELS[state].lower()}."},status=409)
+        if kind=="receipt" and state in (stock.EXPIRED, stock.QUARANTINED):
+            return Response({"code":"invalid_batch","detail":f"Stock cannot be received into batch {batch.number}: it is {state}."},status=409)
+        if batch.quantity + qty < 0:
+            return Response({"code":"insufficient_stock","detail":f"Batch {batch.number} holds only {batch.quantity:,} units."},status=409)
+        try:
+            with transaction.atomic():
+                mv=StockMovement.objects.create(batch=batch,kind=kind,quantity=qty,occurred_at=timezone.now(),actor=request.user,reason=str(d["reason"])[:300],key=d["key"],fingerprint=str(d.get("fingerprint",""))[:64])
         except Exception: return Response({"code":"duplicate_movement","detail":"This movement key has already been processed."},status=409)
-        for b in batch.medicine.batches.all():
-            b.quantity=max(0,b.quantity + (qty if b.pk==batch.pk else 0))
-            if b.pk==batch.pk:b.save(update_fields=["quantity"])
-        return Response({"id":mv.id,"medicine":medicine_dict(batch.medicine)},status=201)
+        batch.quantity+=qty; batch.save(update_fields=["quantity"])
+        AuditEvent.objects.create(actor=request.user,action=f"stock.{kind}",entity=f"batch:{batch.id}",details={"quantity":qty,"batch":batch.number})
+        return Response({"id":mv.id,"batch":stock.batch_dict(batch),"medicine":medicine_dict(batch.medicine)},status=201)
 
 PRIORITY_ORDER = {"critical": 0, "high": 1, "medium": 2, "low": 3}
 

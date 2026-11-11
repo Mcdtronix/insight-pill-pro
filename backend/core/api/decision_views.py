@@ -10,6 +10,8 @@ import logging
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from core.services.stock import StockRuleError
+
 from core.models import Medicine
 from core.services import engine
 
@@ -47,5 +49,5 @@ class DispenseView(APIView):
             return Response({"code": "validation_error", "fields": {"medicineId": ["Unknown medicine."]}}, status=400)
         try:
             return Response(engine.dispense(model_id, qty, request.user), status=201)
-        except ValueError as e:
-            return Response({"code": "insufficient_stock", "detail": str(e)}, status=409)
+        except StockRuleError as e:
+            return Response({"code": e.code, "detail": e.detail}, status=409)

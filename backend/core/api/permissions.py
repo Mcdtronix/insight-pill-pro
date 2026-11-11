@@ -1,8 +1,8 @@
 from rest_framework.permissions import BasePermission
 
 PERMISSIONS = {
-    "admin": {"inventory.view", "inventory.edit", "forecast.view", "recommendations.view", "recommendations.approve", "suppliers.view", "suppliers.edit", "expiry.view", "reports.view", "settings.manage", "audit.view"},
-    "manager": {"inventory.view", "inventory.edit", "forecast.view", "recommendations.view", "recommendations.approve", "suppliers.view", "suppliers.edit", "expiry.view", "reports.view"},
+    "admin": {"inventory.view", "inventory.edit", "catalogue.edit", "forecast.view", "recommendations.view", "recommendations.approve", "suppliers.view", "suppliers.edit", "expiry.view", "reports.view", "settings.manage", "audit.view"},
+    "manager": {"inventory.view", "inventory.edit", "catalogue.edit", "forecast.view", "recommendations.view", "recommendations.approve", "suppliers.view", "suppliers.edit", "expiry.view", "reports.view"},
     # Pharmacists dispense, review supplier performance and approve reorders (dissertation, Section 1.7.1).
     "pharmacist": {"inventory.view", "inventory.edit", "forecast.view", "recommendations.view",
                    "recommendations.approve", "suppliers.view", "expiry.view", "reports.view"},
