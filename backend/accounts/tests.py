@@ -26,6 +26,8 @@ class LoginThrottleTests(TestCase):
     def setUp(self):
         from django.core.cache import cache
         cache.clear()
+        # This test fills the limit on purpose; empty it afterwards for the tests that follow.
+        self.addCleanup(cache.clear)
 
     def test_eleventh_attempt_in_a_minute_is_blocked(self):
         client = APIClient()
