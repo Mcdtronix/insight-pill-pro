@@ -235,6 +235,12 @@ class CatalogueManagementTests(StockSafetyBase):
 
 
 class UserManagementTests(StockSafetyBase):
+    def setUp(self):
+        # The login rate limit (10/min) is counted in the cache, which outlives a test.
+        # Start each sign-in test with a clean count so test order and speed never matter.
+        from django.core.cache import cache
+        cache.clear()
+
     def test_admin_adds_a_user_who_can_then_sign_in(self):
         client = self.client_for(self.admin)
         response = client.post("/api/manage/users/", {"email": "Tendai@PGH.co.zw", "firstName": "Tendai",
@@ -262,7 +268,8 @@ class UserManagementTests(StockSafetyBase):
     def test_deactivated_user_cannot_sign_in(self):
         self.client_for(self.admin).patch(f"/api/manage/users/{self.staff.id}/", {"active": False}, format="json")
         login = APIClient().post("/api/auth/login/", {"email": "st@t.test", "password": "x"}, format="json")
-        self.assertNotEqual(login.status_code, 200)
+        # Refused as a bad sign-in, not merely rate-limited (429 would hide the real result).
+        self.assertIn(login.status_code, (401, 403), login.content)
 
     def test_admin_cannot_lock_themselves_out_or_remove_the_last_admin(self):
         client = self.client_for(self.admin)
