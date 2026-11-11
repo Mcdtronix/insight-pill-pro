@@ -258,3 +258,109 @@ export interface SearchResults {
   suppliers: { id: string; label: string; sub: string }[];
   recommendations: { id: string; label: string; sub: string }[];
 }
+
+// ------------------------------------------------------------ stock safety & records
+
+/** Safety status of one batch on the system's "today" (backend: core.services.stock). */
+export type BatchStatus = "safe" | "short_dated" | "expired" | "quarantined" | "empty";
+
+export interface StockBatch {
+  id: string;
+  medicineId: string;
+  medicineName: string;
+  strength: string;
+  batchNumber: string;
+  supplierId: string | null;
+  supplierName: string | null;
+  receivedAt: string;
+  expiryDate: string;
+  daysToExpiry: number;
+  quantity: number;
+  unitCost: number;
+  quarantined: boolean;
+  status: BatchStatus;
+  statusLabel: string;
+  dispensable: boolean;
+}
+
+export interface DispenseLine extends StockBatch {
+  take: number;
+}
+
+export interface DispensePlan {
+  medicineId: string;
+  medicineName: string;
+  asOf: string;
+  requested: number;
+  available: number;
+  canDispense: boolean;
+  expiredUnits: number;
+  quarantinedUnits: number;
+  lines: DispenseLine[];
+  warnings: string[];
+  refusal?: string;
+  dispensed?: number;
+  stockLeft?: number;
+}
+
+export interface BatchLookup {
+  number: string;
+  asOf: string;
+  matches: StockBatch[];
+}
+
+export interface CatalogueMedicine {
+  id: string;
+  modelId: number | null;
+  name: string;
+  strength: string;
+  category: string;
+  form: string;
+  baseUnit: string;
+  active: boolean;
+  onHand: number;
+  dispensable: number;
+  shortDatedUnits: number;
+  expiredUnits: number;
+  quarantinedUnits: number;
+  batchCount: number;
+  earliestSafeExpiry: string | null;
+  offerCount: number;
+  forecastReady: boolean;
+}
+
+export interface ManagedSupplier {
+  id: string;
+  externalId: number | null;
+  name: string;
+  contactEmail: string;
+  phone: string;
+  status: "active" | "review" | "suspended";
+  offerCount: number | null;
+}
+
+export interface SupplierOfferRow {
+  id: string;
+  medicineId: string;
+  medicineName: string;
+  supplierId: string;
+  supplierName: string;
+  unitCost: number;
+  leadTimeDays: number;
+  packSize: number;
+  minimumOrder: number;
+  active: boolean;
+}
+
+export interface ManagedUser {
+  id: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  name: string;
+  role: Role;
+  active: boolean;
+  isSuperuser: boolean;
+  lastLogin: string | null;
+  dateJoined: string;
+}

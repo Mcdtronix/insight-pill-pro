@@ -398,26 +398,8 @@ def _notify(key, kind, severity, title, message, link):
 
 # ------------------------------------------------------- what-if: dispense
 @transaction.atomic
-def dispense(model_id, quantity, user):
-    """Record a dispense of `quantity` units, first-expiry-first-out across batches."""
-    from core.models import StockMovement
-    med = Medicine.objects.get(model_id=model_id)
-    batches = list(Batch.objects.select_for_update().filter(medicine=med, quarantined=False, quantity__gt=0)
-                   .order_by("expiry_date", "id"))
-    available = sum(b.quantity for b in batches)
-    if quantity > available:
-        raise ValueError(f"Only {available:,} units of {med.name} are in stock.")
-    left, now = quantity, pd.Timestamp.now(tz="UTC").to_pydatetime()
-    for b in batches:
-        if left == 0:
-            break
-        take = min(left, b.quantity)
-        b.quantity -= take
-        b.save(update_fields=["quantity"])
-        StockMovement.objects.create(batch=b, kind="dispense", quantity=-take, occurred_at=now, actor=user,
-                                     reason="What-if dispense (demo)", fingerprint="demo")
-        left -= take
-    AuditEvent.objects.create(actor=user, action="dispense", entity=f"medicine:{med.id}",
-                              details={"quantity": quantity})
-    return {"medicineId": med.id, "modelId": model_id, "medicineName": med.name,
-            "dispensed": quantity, "stockLeft": available - quantity}
+def dispense(model_id, quantity, user, reason="What-if dispense (demo)"):
+    """Dispense by model id (the Reorder Decisions what-if). Rules live in core.services.stock."""
+    from core.services import stock
+
+    return stock.dispense(Medicine.objects.get(model_id=model_id), quantity, user, reason)

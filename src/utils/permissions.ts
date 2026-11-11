@@ -7,6 +7,8 @@ export type Permission =
   | "recommendations.view"
   | "recommendations.approve"
   | "suppliers.view"
+  | "suppliers.edit"
+  | "catalogue.edit"
   | "expiry.view"
   | "reports.view"
   | "settings.manage";
@@ -15,10 +17,12 @@ const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
   admin: [
     "inventory.view",
     "inventory.edit",
+    "catalogue.edit",
     "forecast.view",
     "recommendations.view",
     "recommendations.approve",
     "suppliers.view",
+    "suppliers.edit",
     "expiry.view",
     "reports.view",
     "settings.manage",
@@ -26,10 +30,12 @@ const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
   manager: [
     "inventory.view",
     "inventory.edit",
+    "catalogue.edit",
     "forecast.view",
     "recommendations.view",
     "recommendations.approve",
     "suppliers.view",
+    "suppliers.edit",
     "expiry.view",
     "reports.view",
   ],

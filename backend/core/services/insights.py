@@ -30,7 +30,13 @@ _cache = {}
 
 # ------------------------------------------------------------ shared plan
 def _signature(as_of):
-    parts = [as_of.isoformat(), list(Batch.objects.order_by("id").values_list("id", "quantity", "quarantined")),
+    # Everything the engine reads: a change to any of it must produce a fresh plan.
+    parts = [as_of.isoformat(),
+             list(Batch.objects.order_by("id").values_list("id", "quantity", "quarantined", "expiry_date")),
+             list(SupplierOffer.objects.order_by("id").values_list("id", "unit_cost", "lead_time_days", "lead_time_std",
+                                                                   "pack_size", "minimum_order", "active")),
+             list(Supplier.objects.order_by("id").values_list("id", "status")),
+             list(Medicine.objects.order_by("id").values_list("id", "active", "category")),
              list(PurchaseOrder.objects.order_by("id").values_list("id", "quantity", "received_units", "status")),
              list(Policy.objects.values_list("service_level", "lead_time_buffer", "review_period")),
              Medicine.objects.count(), SupplierDelivery.objects.count()]

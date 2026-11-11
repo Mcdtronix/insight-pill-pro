@@ -1,6 +1,11 @@
 from django.urls import path
 from .decision_views import DecisionRunView, DispenseView
 from .lab_views import LabActionView, LabModelsView
+from .manage_views import (
+    BatchDisposeView, BatchEditView, BatchListView, BatchLookupView, DispensePreviewView, DispenseToPatientView,
+    MedicineEditView, MedicineListView as CatalogueMedicineListView, OfferEditView, OfferListView,
+    SupplierEditView, SupplierManageListView, UserEditView, UserListView,
+)
 from .views import (
     HealthView, MedicineListView, MedicineDetailView, MedicineForecastView, MedicineTransactionsView, SearchView,
     InventoryView, InventoryDetailView, InventoryHealthView, InventoryTrendView, ExpiryRiskView, StockMovementView,
@@ -35,6 +40,22 @@ urlpatterns = [
     path("reports/generate/", ReportView.as_view()),
     path("decisions/run/", DecisionRunView.as_view()),
     path("decisions/dispense/", DispenseView.as_view()),
+    # Record management (medicines, suppliers, offers, batches with expiry, users)
+    path("manage/medicines/", CatalogueMedicineListView.as_view()),
+    path("manage/medicines/<int:pk>/", MedicineEditView.as_view()),
+    path("manage/suppliers/", SupplierManageListView.as_view()),
+    path("manage/suppliers/<int:pk>/", SupplierEditView.as_view()),
+    path("manage/offers/", OfferListView.as_view()),
+    path("manage/offers/<int:pk>/", OfferEditView.as_view()),
+    path("manage/users/", UserListView.as_view()),
+    path("manage/users/<int:pk>/", UserEditView.as_view()),
+    path("batches/", BatchListView.as_view()),
+    path("batches/lookup/", BatchLookupView.as_view()),
+    path("batches/<int:pk>/", BatchEditView.as_view()),
+    path("batches/<int:pk>/dispose/", BatchDisposeView.as_view()),
+    # Patient dispensing: expired and quarantined stock is never given out
+    path("dispense/preview/", DispensePreviewView.as_view()),
+    path("dispense/", DispenseToPatientView.as_view()),
     path("lab/models/", LabModelsView.as_view()),
     path("lab/<str:model>/<str:action>/", LabActionView.as_view()),
 ]
